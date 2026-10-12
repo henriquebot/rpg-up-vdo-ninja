@@ -3,7 +3,12 @@
 <title>RPGUP — fixture de teste, sem Foundry real</title>
 <link rel="stylesheet" href="/styles/module.css">
 <style>
-body { position: fixed; display: flex; margin: 0; width: 100vw; height: 100vh; font-family: sans-serif; background: #30343d; color: #eee; }
+/* Emulate Theme V2 theme selection without depending on OS color preference.
+   Foundry can select the theme at world level or for each ApplicationV2. */
+body { position: fixed; display: flex; margin: 0; width: 100vw; height: 100vh; font-family: sans-serif; background: #30343d; color: #eee; --color-text-primary: #f4f1ed; --color-text-secondary: #c7c0b5; }
+body.theme-light { background: #e5dfd2; color: #282623; --color-text-primary: #282623; --color-text-secondary: #514b44; }
+body.theme-light .application { background: #f3efe7; color: #282623; }
+body.theme-light .window-header { background: #e4dccd; color: #282623; }
 #interface { display: flex; flex: 1; position: relative; }
 #ui-left { position: absolute; left: 0; }
 #ui-right { position: absolute; right: 0; }

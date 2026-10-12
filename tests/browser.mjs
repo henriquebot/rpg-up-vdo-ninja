@@ -200,6 +200,61 @@ try {
   await worldTab(page, "appearance");
   assert.equal(await page.getByRole("button", { name: "Simular fala na prévia" }).isDisabled(), true);
   await worldTab(page, "audioFilters");
+  // Theme V2 regression: the same AppV2 must be legible in Light and Dark,
+  // including the audio filters tab, active icons, select menus and footer.
+  const mediaURLBeforeThemeCheck = await page.locator("iframe").getAttribute("src");
+  for (const mode of ["light", "dark"]) {
+    await page.evaluate(value => document.body.classList.toggle("theme-light", value === "light"), mode);
+    const visual = await page.evaluate(() => {
+      const get = selector => getComputedStyle(document.querySelector(selector));
+      const app = get("#rpgup-vdo-world-config");
+      const tab = get("#rpgup-world-tab-audioFilters");
+      const nav = get("#rpgup-vdo-world-config .rpgup-tab-bar");
+      const select = get('select[name="audioFilterPreset"]');
+      const footer = get("#rpgup-vdo-world-config .rpgup-config-footer");
+      const help = get("#rpgup-world-pane-audioFilters .rpgup-help");
+      const label = get("#rpgup-world-pane-audioFilters .rpgup-audio-filter-toggle > span");
+      const parse = color => {
+        const parts = color.match(/[\d.]+/g)?.map(Number) ?? [];
+        return parts.slice(0, 3).map(x => {
+          const v = x / 255;
+          return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+        });
+      };
+      const luminance = color => parse(color).reduce((sum, value, index) => sum + value * [.2126,.7152,.0722][index], 0);
+      const contrast = (fg,bg) => {
+        const a=luminance(fg), b=luminance(bg);
+        return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+      };
+      return {
+        text: app.color, tabColor: tab.color, tabBg: tab.backgroundColor,
+        navBg: nav.backgroundColor, selectColor: select.color, selectBg: select.backgroundColor,
+        selectScheme: select.colorScheme, footerBg: footer.backgroundColor, footerColor: footer.color,
+        helpColor: help.color, labelColor: label.color,
+        contrastSelect: contrast(select.color, select.backgroundColor),
+        contrastTab: contrast(tab.color, tab.backgroundColor),
+        contrastFooter: contrast(footer.color, footer.backgroundColor)
+      };
+    });
+    assert.ok(visual.contrastSelect >= 4.5, `${mode}: dropdown text contrast, ${JSON.stringify(visual)}`);
+    assert.ok(visual.contrastTab >= 4.5, `${mode}: selected icon contrast, ${JSON.stringify(visual)}`);
+    assert.ok(visual.contrastFooter >= 4.5, `${mode}: footer text contrast, ${JSON.stringify(visual)}`);
+    assert.equal(visual.selectScheme, mode, `${mode}: native dropdown must match Foundry theme`);
+    assert.equal(visual.navBg, visual.footerBg, `${mode}: tabs and footer share theme background`);
+    assert.equal(visual.labelColor, visual.text, `${mode}: audio labels inherit window text`);
+    await page.screenshot({ path: path.join(screenshotDirectory, `audio-filters-${mode}.png`) });
+    if (mode === "light") {
+      await worldTab(page, "participants");
+      await page.screenshot({ path: path.join(screenshotDirectory, "participants-light.png") });
+      await worldTab(page, "appearance");
+      await page.screenshot({ path: path.join(screenshotDirectory, "appearance-light.png") });
+      await worldTab(page, "advanced");
+      await page.screenshot({ path: path.join(screenshotDirectory, "advanced-light.png") });
+      await worldTab(page, "audioFilters");
+    }
+  }
+  assert.equal(await page.locator("iframe").getAttribute("src"), mediaURLBeforeThemeCheck, "Theme switch must not reconnect media");
+  assert.equal(await page.evaluate(() => fixture.config().audio), "discord", "Theme check must not edit world settings");
   assert.equal(await page.getByRole("combobox", { name: "audioFilterPreset" }).inputValue(), "voice", "Legacy worlds start with safe voice preset");
   assert.match(await page.locator("#rpgup-world-pane-audioFilters").innerText(), /Discord/);
   assert.equal(await page.locator('input[name="filter_denoise"]').isChecked(), true);
