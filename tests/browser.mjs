@@ -215,7 +215,7 @@ try {
       const help = get("#rpgup-world-pane-audioFilters .rpgup-help");
       const label = get("#rpgup-world-pane-audioFilters .rpgup-audio-filter-toggle > span");
       const parse = color => {
-        const parts = color.match(/[\\d.]+/g)?.map(Number) ?? [];
+        const parts = color.match(/[\d.]+/g)?.map(Number) ?? [];
         return parts.slice(0, 3).map(x => {
           const v = x / 255;
           return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
