@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 1.0.11 — 12/10/2026
+
+- Corrige o contraste visual em **tema claro** do Foundry v13/v14: barra de guias, ícones ativos, dropdowns, rodapé de configuração, mensagens de ajuda, entradas e controles de áudio seguem a paleta adequada ao tema.
+- Remove fundos escuros forçados de navegação, `select` e rodapé; os menus nativos respeitam `color-scheme` claro/escuro e exibem texto legível, inclusive opções desabilitadas.
+- Melhora a leitura das caixas de seleção, rótulos, parâmetros avançados, participantes e tooltips. Mantém a identidade dourada do RPGUP e o painel de câmera VDO como estava.
+- Testes em navegador simulam **Foundry Dark e Light**, avaliam contraste de texto na guia de áudio, menus, botão ativo e rodapé e geram capturas nas demais guias. Alternar a paleta não deve alterar as configurações do mundo nem reconectar a sala.
+- **Somente CSS e teste visual**: nenhuma mudança na lógica de áudio, câmera, nomes, Stream IDs, Room, links externos, exportação OBS ou limite anti-414.
+
+
 ## 1.0.10 — 11/10/2026
 
 - Nova guia **Tratamento de áudio**, com permissão de edição exclusiva para o GM: perfis Voz limpa (padrão), Redução reforçada, Desligado e Personalizado.
