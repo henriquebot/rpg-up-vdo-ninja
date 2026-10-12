@@ -75,7 +75,7 @@
 .rpgup-tab-bar { position: sticky; top: 0; z-index: 3; display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding: 4px 3px 9px; margin-bottom: 10px; border-bottom: 1px solid var(--rpgup-line); background: var(--rpgup-surface); }
 .rpgup-tab-bar .rpgup-tab-button { display: inline-flex; justify-content: center; align-items: center; flex: 0 0 38px; height: 34px; border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 7px; color: var(--rpgup-text); cursor: pointer; }
 .rpgup-tab-bar .rpgup-tab-button i { margin: 0; font-size: 15px; pointer-events: none; }
-.rpgup-tab-bar .rpgup-tab-button[aria-selected="true"] { border-color: var(--rpgup-accent); background: var(--rpgup-tab-selected); color: var(--rpgup-tab-selected-text); box-shadow: inset 0 -2px 0 var(--rpgup-accent); }
+.rpgup-vdo .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"] { border-color: var(--rpgup-accent); background: var(--rpgup-tab-selected); color: var(--rpgup-tab-selected-text); box-shadow: inset 0 -2px 0 var(--rpgup-accent); }
 .rpgup-tab-bar .rpgup-tab-button:hover { border-color: var(--rpgup-accent); }
 .rpgup-tab-bar .rpgup-tour-start { margin-left: auto; }
 .rpgup-tab-pane { min-width: 0; padding: 4px 0; }
