@@ -1,18 +1,52 @@
+/* Local tokens adapt to Foundry's Theme V2; no changes to the VDO iframe.
+   ThemeV2 may apply the theme to body OR an individual .application. */
 .rpgup-vdo {
   --rpgup-accent: #d7ab70;
+  --rpgup-accent-readable: #d7ab70;
   --rpgup-text: var(--color-text-primary, #e7e4df);
-  --rpgup-muted: var(--color-text-secondary, #b6b3af);
-  --rpgup-line: color-mix(in srgb, var(--rpgup-text) 16%, transparent);
-  --rpgup-card: color-mix(in srgb, var(--rpgup-text) 4%, transparent);
+  --rpgup-muted: var(--color-text-secondary, #c7c0b5);
+  --rpgup-line: color-mix(in srgb, var(--rpgup-text) 22%, transparent);
+  --rpgup-card: color-mix(in srgb, var(--rpgup-text) 6%, transparent);
+  --rpgup-surface: #24262d;
+  --rpgup-menu-text: #f7f4ec;
+  --rpgup-tab-selected: #614929;
+  --rpgup-tab-selected-text: #fff7eb;
+  --rpgup-color-scheme: dark;
   color: var(--rpgup-text);
+}
+/* A world can choose Light even when the browser OS prefers Dark, and
+   Foundry can set the theme on an individual ApplicationV2 window. */
+:is(body.theme-light, .themed.theme-light) .rpgup-vdo,
+.rpgup-vdo:is(.theme-light, .themed.theme-light) {
+  --rpgup-accent: #a8753a;
+  --rpgup-accent-readable: #82511e;
+  --rpgup-text: var(--color-text-primary, #282623);
+  --rpgup-muted: var(--color-text-secondary, #554e45);
+  --rpgup-line: color-mix(in srgb, var(--rpgup-text) 25%, transparent);
+  --rpgup-card: color-mix(in srgb, var(--rpgup-text) 6%, transparent);
+  --rpgup-surface: #f3efe7;
+  --rpgup-menu-text: #272421;
+  --rpgup-tab-selected: #ead8bc;
+  --rpgup-tab-selected-text: #412f1b;
+  --rpgup-color-scheme: light;
 }
 .rpgup-vdo .window-content { overflow: auto; padding: 16px; container-type: inline-size; container-name: rpgup; }
 .rpgup-vdo .window-content input:not([type="checkbox"]):not([type="range"]), .rpgup-vdo .window-content select { border: 1px solid var(--rpgup-line); border-radius: 5px; min-height: 32px; padding: 4px 7px; color: var(--rpgup-text); background: color-mix(in srgb, var(--rpgup-text) 5%, transparent); }
-/* Native dropdown contrast for Windows and dark Foundry themes. */
-.rpgup-vdo .window-content select { color-scheme: dark; background-color: #23252b; color: #f7f4ec; }
-.rpgup-vdo .window-content select option { background-color: #23252b; color: #f7f4ec; }
-.rpgup-vdo .window-content select option:checked { background-color: #75583a; color: #fff9ed; }
-.rpgup-vdo .window-content select option:disabled { color: #a5a5ab; }
+/* Native option popup must follow the chosen Foundry theme (including Windows). */
+.rpgup-vdo .window-content select {
+  color-scheme: var(--rpgup-color-scheme);
+  background-color: var(--rpgup-surface);
+  color: var(--rpgup-menu-text);
+}
+.rpgup-vdo .window-content select option {
+  background-color: var(--rpgup-surface);
+  color: var(--rpgup-menu-text);
+}
+.rpgup-vdo .window-content select option:checked {
+  background-color: var(--rpgup-tab-selected);
+  color: var(--rpgup-tab-selected-text);
+}
+.rpgup-vdo .window-content select option:disabled { color: var(--rpgup-muted); }
 .rpgup-vdo .window-content button { border-radius: 5px; min-height: 30px; padding: 4px 8px; }
 .rpgup-vdo .window-content button:not(.rpgup-primary) { color: var(--rpgup-text); background: var(--rpgup-card); border: 1px solid var(--rpgup-line); }
 .rpgup-vdo .window-content button:not(.rpgup-primary):hover { border-color: var(--rpgup-accent); }
@@ -27,7 +61,7 @@
 .rpgup-vdo .rpgup-actions button { width: auto; flex: 0 1 auto; min-height: 32px; }
 .rpgup-vdo button > i { margin-right: 5px; }
 .rpgup-vdo .rpgup-panel { border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 9px; padding: 12px; margin: 0; min-width: 0; }
-.rpgup-vdo .rpgup-panel legend { padding: 0 6px; color: var(--rpgup-accent); font-size: 13px; font-weight: 600; }
+.rpgup-vdo .rpgup-panel legend { padding: 0 6px; color: var(--rpgup-accent-readable); font-size: 13px; font-weight: 600; }
 .rpgup-vdo .rpgup-help { color: var(--rpgup-muted); font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
 .rpgup-vdo .rpgup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 10px; }
 .rpgup-vdo .rpgup-intro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
@@ -38,19 +72,19 @@
 .rpgup-vdo .rpgup-advanced[open] summary { margin-bottom: 10px; }
 /* Icon-only, accessible navigation: content groups are no longer stacked. */
 .rpgup-tabs { width: 100%; min-width: 0; }
-.rpgup-tab-bar { position: sticky; top: 0; z-index: 3; display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding: 4px 3px 9px; margin-bottom: 10px; border-bottom: 1px solid var(--rpgup-line); background: var(--background-color, #202126); }
+.rpgup-tab-bar { position: sticky; top: 0; z-index: 3; display: flex; gap: 5px; align-items: center; flex-wrap: nowrap; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; padding: 4px 3px 9px; margin-bottom: 10px; border-bottom: 1px solid var(--rpgup-line); background: var(--rpgup-surface); }
 .rpgup-tab-bar .rpgup-tab-button { display: inline-flex; justify-content: center; align-items: center; flex: 0 0 38px; height: 34px; border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 7px; color: var(--rpgup-text); cursor: pointer; }
 .rpgup-tab-bar .rpgup-tab-button i { margin: 0; font-size: 15px; pointer-events: none; }
-.rpgup-tab-bar .rpgup-tab-button[aria-selected="true"] { border-color: var(--rpgup-accent); background: #614929; color: #fff7eb; box-shadow: inset 0 -2px 0 var(--rpgup-accent); }
+.rpgup-tab-bar .rpgup-tab-button[aria-selected="true"] { border-color: var(--rpgup-accent); background: var(--rpgup-tab-selected); color: var(--rpgup-tab-selected-text); box-shadow: inset 0 -2px 0 var(--rpgup-accent); }
 .rpgup-tab-bar .rpgup-tab-button:hover { border-color: var(--rpgup-accent); }
 .rpgup-tab-bar .rpgup-tour-start { margin-left: auto; }
 .rpgup-tab-pane { min-width: 0; padding: 4px 0; }
 .rpgup-tab-section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .rpgup-tab-section > .rpgup-help { margin: 0; }
 .rpgup-tab-section > .rpgup-intro { margin-bottom: 0; }
-.rpgup-tour { padding: 10px; margin: 0 0 10px; border: 1px solid var(--rpgup-accent); border-radius: 8px; background: color-mix(in srgb, var(--rpgup-accent) 9%, #202126); }
+.rpgup-tour { padding: 10px; margin: 0 0 10px; border: 1px solid var(--rpgup-accent); border-radius: 8px; background: color-mix(in srgb, var(--rpgup-accent) 12%, var(--rpgup-surface)); }
 .rpgup-tour p { margin: 5px 0 8px; line-height: 1.45; }
-.rpgup-tour-counter { font-size: 11px; color: var(--rpgup-accent); font-weight: 700; }
+.rpgup-tour-counter { font-size: 11px; color: var(--rpgup-accent-readable); font-weight: 700; }
 .rpgup-tour-controls { display: flex; justify-content: flex-end; gap: 5px; flex-wrap: wrap; }
 .rpgup-tour-controls button { width: auto; min-height: 30px; }
 .rpgup-tour-target { outline: 2px solid var(--rpgup-accent) !important; outline-offset: 3px; border-radius: 4px; }
@@ -119,7 +153,7 @@ body.rpgup-vdo-docked #interface {
 .rpgup-config-form .rpgup-copy-link button span { display: none; }
 .rpgup-config-form .rpgup-copy-link button i { margin: 0; }
 .rpgup-config-form .rpgup-link-warning { display: block; color: var(--color-level-warning, #e9b35a); margin-top: 4px; }
-.rpgup-config-footer { position: sticky; bottom: -16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rpgup-line); background: var(--background-color, #22242b); }
+.rpgup-config-footer { position: sticky; bottom: -16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rpgup-line); background: var(--rpgup-surface); }
 .rpgup-config-footer p { flex: 1 1 240px; margin: 0; font-size: 12px; color: var(--rpgup-muted); }
 .rpgup-config-footer button { flex: 0 1 auto; width: auto; min-height: 34px; }
 @media (max-width: 640px) {
@@ -180,3 +214,35 @@ body.rpgup-vdo-docked #interface {
 .rpgup-audio-filter-toggle { display:flex; align-items:center; gap:9px; font-size:12px; line-height:1.35; cursor:pointer; }
 .rpgup-audio-filter-toggle input { flex-shrink:0; accent-color:var(--rpgup-accent); }
 .rpgup-audio-filter-toggle:has(input:disabled) { opacity:.75; }
+
+/* Keep form labels and help text legible on light parchment and dark windows.
+   Disabled controls still remain visibly disabled, with readable descriptions. */
+.rpgup-vdo .window-content,
+.rpgup-vdo .rpgup-config-form,
+.rpgup-vdo .rpgup-tab-pane,
+.rpgup-vdo .rpgup-option-editor,
+.rpgup-vdo .rpgup-audio-filter-grid { color: var(--rpgup-text); }
+.rpgup-vdo .rpgup-config-footer p,
+.rpgup-vdo .rpgup-help,
+.rpgup-vdo .rpgup-option-entry code,
+.rpgup-vdo .rpgup-audio-filter-toggle { color: var(--rpgup-muted); }
+.rpgup-vdo .rpgup-field > span,
+.rpgup-vdo .rpgup-audio-filter-toggle > span { color: var(--rpgup-text); }
+.rpgup-vdo .rpgup-tab-bar,
+.rpgup-vdo .rpgup-config-footer {
+  border-color: var(--rpgup-line);
+  color: var(--rpgup-text);
+}
+.rpgup-vdo .rpgup-tab-bar .rpgup-tab-button:not([aria-selected="true"]) {
+  color: var(--rpgup-text);
+  background: var(--rpgup-card);
+}
+.rpgup-vdo .rpgup-config-form input:not([type="checkbox"]):not([type="range"]) {
+  color: var(--rpgup-text);
+  background: var(--rpgup-card);
+}
+.rpgup-vdo .rpgup-config-form input::placeholder { color: var(--rpgup-muted); opacity: .9; }
+.rpgup-vdo .rpgup-config-form input:disabled,
+.rpgup-vdo .rpgup-config-form button:disabled { opacity: .68; }
+.rpgup-vdo .rpgup-config-form .rpgup-primary,
+.rpgup-vdo .rpgup-config-form button.rpgup-primary { color: #fff5e7; }
