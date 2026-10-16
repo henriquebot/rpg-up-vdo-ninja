@@ -155,10 +155,10 @@ export function createPersonalTabs() {
 
   return {
     tabs: [
-      { key: "connect", title: "Conexão da sala", icon: "fa-video", children: [connection] },
-      { key: "window", title: "Posição e tamanho da janela", icon: "fa-window-maximize", children: [windowPane] },
-      { key: "avatar", title: "Imagem com câmera desligada", icon: "fa-image", children: [avatarPane] },
-      { key: "callhelp", title: "Ajuda e controles da chamada", icon: "fa-circle-question", children: [help] }
+      { key: "connect", title: "Conexão", group: "Minha câmera", icon: "fa-video", children: [connection] },
+      { key: "window", title: "Janela", group: "Minha câmera", icon: "fa-window-maximize", children: [windowPane] },
+      { key: "avatar", title: "Avatar", group: "Minha câmera", icon: "fa-image", children: [avatarPane] },
+      { key: "callhelp", title: "Ajuda", group: "Minha câmera", icon: "fa-circle-question", children: [help] }
     ],
     tourSteps: [
       { tab: "connect", target: () => reconnect, text: "Aplicar / reconectar entra na sala e reinicia sua câmera." },
