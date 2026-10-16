@@ -11,7 +11,7 @@ function findSidebar() {
   const root = ui.sidebar?.element ?? document.querySelector("#sidebar");
   if (!root) return null;
   const nav = root.querySelector("#sidebar-tabs, nav.sidebar-tabs, nav[aria-label*='Sidebar'], nav.tabs");
-  const content = root.querySelector("#sidebar-content, .sidebar-content, .sidebar-panels, .sidebar-content-container");
+  const content = root.querySelector("#sidebar-content, .sidebar-content, .sidebar-panels, .sidebar-content-container, [data-sidebar-content]");
   return nav && content ? { root, nav, content } : null;
 }
 
@@ -45,6 +45,8 @@ function renderInvite(state) {
 
 async function mountForm(state) {
   const config = new WorldConfig();
+  // A settings-menu fallback may already be open; avoid stealing its live form.
+  if (config.rendered) await config.close();
   config._sidebarHost = state.formHost;
   const form = await config._renderHTML();
   if (state.formHost.isConnected) state.formHost.replaceChildren(form);
@@ -165,8 +167,10 @@ function install() {
   // Deactivate also when core or another module changes tabs programmatically.
   // This is intentionally scoped to the nav instead of observing the whole UI.
   const observer = new MutationObserver(() => {
-    if (panel.hidden || trigger.classList.contains("active")) return;
-    deactivate();
+    if (panel.hidden) return;
+    const selectedElsewhere = Array.from(nav.querySelectorAll("[data-tab]")).some(tab =>
+      tab !== trigger && (tab.classList.contains("active") || tab.getAttribute("aria-selected") === "true"));
+    if (selectedElsewhere || !trigger.classList.contains("active")) deactivate();
   });
   observer.observe(nav, { attributes: true, subtree: true, attributeFilter: ["class", "aria-selected"] });
   state.activate = activate;
