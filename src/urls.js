@@ -118,6 +118,19 @@ export function avatarURLBudget(world, user, prefs = {}, users = [user], baseURL
   return Math.max(0, Math.min(5800, MAX_VDO_URL_LENGTH - baseline.length - "&avatar=".length - 150));
 }
 
+// General guest invitation: never reuse a Foundry user's publisher Stream ID.
+// Identified Foundry participants should use their own integrated dock.
+export function roomInviteURL(world, users = []) {
+  const { config, url } = configuredURL(world, users);
+  const password = parseExtraQuery(config.extraQuery).get("password");
+  if (password) url.searchParams.set("password", password);
+  if (config.audio === "discord") {
+    url.searchParams.set("audiodevice", "0");
+    url.searchParams.set("noaudio", "");
+  }
+  return url.href;
+}
+
 export function soloURL(world, userId, users = []) {
   const { config, url } = configuredURL(world, users);
   const streamId = Object.hasOwn(config.slots, userId) ? config.slots[userId] : null;

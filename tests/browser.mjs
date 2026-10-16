@@ -36,11 +36,20 @@ async function openSettings(page) {
 }
 async function dockTab(page, key) {
   await openSettings(page);
-  await page.locator(`#rpgup-world-tab-${key}`).click();
+  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  if (!await tab.isVisible()) {
+    await page.getByRole("button", { name: "Minha câmera", exact: true }).click();
+  }
+  await tab.click();
 }
 async function worldTab(page, key) {
   await openSettings(page);
-  await page.locator(`#rpgup-world-tab-${key}`).click();
+  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  if (!await tab.isVisible()) {
+    const group = ["general", "participants", "appearance"].includes(key) ? "Mesa" : "Avançado";
+    await page.getByRole("button", { name: group, exact: true }).click();
+  }
+  await tab.click();
 }
 try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
@@ -111,9 +120,9 @@ try {
   assert.ok(initialURL.length <= 6900, "Nunca enviar request URI grande o bastante para o nginx responder 414");
   assert.equal(await page.locator('[name="Câmera padrão"], [name="Interface VDO"], [name="Self-preview"]').count(), 0);
   await dockTab(page, "window");
-  assert.match(await page.getByRole("checkbox").getAttribute("title"), /não liga sua câmera/i);
+  assert.match(await page.locator('.rpgup-personal-window .rpgup-field:has(input[type="checkbox"]) .rpgup-info-icon').getAttribute("title"), /não liga sua câmera/i);
   await dockTab(page, "avatar");
-  assert.match(await page.getByRole("combobox", { name: "Placeholder", exact: true }).getAttribute("data-tooltip"), /cada sessão/);
+  assert.match(await page.locator('.rpgup-personal-avatar .rpgup-field:has(select[name="Placeholder"]) .rpgup-info-icon').getAttribute("data-tooltip"), /cada sessão/);
   await dockTab(page, "window");
   assert.equal((await page.locator("iframe").getAttribute("allow")).includes("microphone"), false);
   assert.equal(await page.locator("iframe").getAttribute("sandbox"), null);
@@ -279,7 +288,7 @@ try {
   assert.equal(await page.locator("iframe").getAttribute("src"), beforeDraftReload);
   await page.getByRole("textbox", { name: "Stream ID de Jogador A", exact: true }).fill("slot_a");
   await worldTab(page, "general");
-  assert.match(await page.getByRole("combobox", { name: "directorUserId", exact: true }).getAttribute("data-tooltip"), /Scene Preview/);
+  assert.match(await page.locator('.rpgup-field:has(select[name="directorUserId"]) .rpgup-info-icon').getAttribute("data-tooltip"), /Scene Preview/);
   await worldTab(page, "participants");
   assert.equal(await page.getByRole("textbox", { name: "Solo link OBS", exact: false }).count(), 3);
   await page.waitForFunction(() => document.querySelector('input[aria-label="Link de entrada no navegador de Jogador A"]')?.value.startsWith("https://vdo.ninja/"));
@@ -309,7 +318,7 @@ try {
   await page.getByRole("combobox", { name: "roomLayout", exact: true }).selectOption("compact");
   await worldTab(page, "participants");
   await page.getByRole("textbox", { name: "Avatar da mesa de Jogador A", exact: true }).fill("/tests/users/avatar-gm.webp");
-  await page.getByRole("button", { name: "Salvar configuração", exact: true }).click();
+  await page.getByRole("button", { name: "Salvar mudanças", exact: true }).click();
   await page.waitForFunction(() => fixture.config().audio === "vdo");
   assert.equal((await page.evaluate(() => fixture.config())).quality, "economy");
   assert.equal((await page.evaluate(() => fixture.config())).audioFilters.preset, "enhanced");
@@ -331,7 +340,7 @@ try {
   assert.ok(updatedJoin.href.length <= 6900);
   assert.ok(updatedJoin.searchParams.get("avatar").startsWith("data:image/"), "Avatar Foundry da mesa incorporado funciona no navegador externo");
   const obsDownload = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Baixar links OBS", exact: true }).click();
+  await page.getByRole("button", { name: "Exportar links OBS", exact: true }).click();
   const downloadedLinks = await obsDownload;
   const exportedLinks = JSON.parse(await readFile(await downloadedLinks.path(), "utf8"));
   assert.equal(exportedLinks.sources.length, 3);
@@ -429,12 +438,12 @@ try {
   assert.match(await guest.locator(".rpgup-connection-alert").innerText(), /GM ainda não associou/);
   await page.evaluate(() => fixture.menu("worldConfig"));
   await worldTab(page, "participants");
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   await page.waitForFunction(() => fixture.config().slots.p1 && fixture.config().slots.p2);
   const generated = await page.evaluate(() => fixture.config().slots);
   await guest.waitForFunction(() => document.querySelector("iframe"));
   assert.equal(new URL(await guest.locator("iframe").getAttribute("src")).searchParams.get("push"), generated.p1);
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   assert.deepEqual(await page.evaluate(() => fixture.config().slots), generated);
   await page.getByRole("textbox", { name: "Stream ID de Jogador A", exact: true }).fill("player_custom");
   await page.evaluate(() => fixture.menu("worldConfig"));
@@ -459,7 +468,7 @@ try {
   await worldTab(page, "participants");
   await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).fill("unsaved_b");
   await page.evaluate(() => fixture.setConfig({ ...fixture.config(), roomId: "OtherGMRoom" }));
-  await page.getByRole("button", { name: "Salvar configuração", exact: true }).click();
+  await page.getByRole("button", { name: "Salvar mudanças", exact: true }).click();
   await page.waitForFunction(() => notices.some(notice => notice.value.includes("Outro GM")));
   assert.equal((await page.evaluate(() => fixture.config().slots)).p2, generated.p2);
   assert.equal(await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).inputValue(), "unsaved_b");
@@ -468,7 +477,7 @@ try {
   await worldTab(page, "participants");
   await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).fill("");
   await page.evaluate(() => { fixture.failSave = true; });
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   await page.waitForFunction(() => notices.some(notice => notice.value.includes("gravação recusada")));
   assert.equal((await page.evaluate(() => fixture.config().slots)).p2, generated.p2);
   assert.match(await page.locator(".rpgup-config-form .rpgup-save-status").innerText(), /Não salvo/);
@@ -485,7 +494,7 @@ try {
   });
   await page.getByRole("textbox", { name: "Stream ID de Jogador criado depois", exact: true }).waitFor();
   assert.equal(await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).inputValue(), "membership_draft");
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   await page.waitForFunction(() => fixture.config().slots.replacement && fixture.config().slots.p2 === "membership_draft");
   await page.evaluate(() => fixture.closeConfig());
   console.log("Usuário criado com painel aberto: lista atualizada, rascunho preservado e slot salvo: OK.");
@@ -624,6 +633,62 @@ try {
   assert.equal(await page.locator("body").evaluate(node => node.classList.contains("rpgup-vdo-docked")), false);
   assert.equal(await page.locator("body").evaluate(node => node.style.getPropertyValue("--rpgup-vdo-left")), "");
   console.log("Janela única, separação GM/jogador, posição, zoom, avatar, iframe e resize: OK.");
+
+  // Sidebar navigation simulation: no floating configuration window, full
+  // controls hosted in the same column as native Chat/Scenes/Actors tabs.
+  const hudContext = await browser.newContext({ viewport: { width: 1280, height: 840 } });
+  await hudContext.route("https://vdo.ninja/**", route =>
+    route.fulfill({ contentType: "text/html", body: "<p>VDO fixture</p>" }));
+  const hudPage = await hudContext.newPage();
+  const hudErrors = [];
+  hudPage.on("pageerror", error => hudErrors.push(error.message));
+  await hudPage.goto(base + "/tests/harness.html");
+  await hudPage.waitForFunction(() => globalThis.fixtureReady);
+  await hudPage.evaluate(() => {
+    const sidebar = document.createElement("section");
+    sidebar.id = "sidebar";
+    sidebar.style.cssText = "position:absolute;right:0;top:0;width:340px;height:800px;display:flex;flex-direction:column;background:#24262d;";
+    const tabs = document.createElement("nav");
+    tabs.id = "sidebar-tabs";
+    tabs.innerHTML = '<button class="sidebar-tab active" type="button" data-tab="settings" aria-selected="true">Configurações</button>';
+    const content = document.createElement("div");
+    content.id = "sidebar-content";
+    content.style.cssText = "flex:1;min-height:0;";
+    content.innerHTML = '<section class="native-settings">Painel original</section>';
+    sidebar.append(tabs, content);
+    document.body.append(sidebar);
+    ui.sidebar = { element: sidebar, expand() { return Promise.resolve(); } };
+    Hooks.callAll("renderSidebar", ui.sidebar, sidebar);
+  });
+  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1);
+  assert.equal(await hudPage.locator("#sidebar-content .rpgup-sidebar-pane").count(), 1);
+  await hudPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
+  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
+  assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "HUD não cria janela separada");
+  assert.match(await hudPage.locator(".rpgup-invite-copy input").inputValue(), /room=FixtureRoom123/);
+  assert.equal(await hudPage.locator(".rpgup-invite-copy button").isEnabled(), true);
+  assert.equal(await hudPage.locator(".rpgup-group-button").count(), 3);
+  await hudPage.getByRole("button", { name: "Avançado", exact: true }).click();
+  assert.equal(await hudPage.locator("#rpgup-world-tab-audioFilters").isVisible(), true);
+  await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
+  assert.equal(await hudPage.locator("#rpgup-world-tab-general").isVisible(), true);
+  await hudPage.locator('.rpgup-sidebar-pane input[name="roomId"]').fill("HudTestRoom001");
+  await hudPage.locator(".rpgup-sidebar-pane .rpgup-config-footer button[type=submit]").click();
+  await hudPage.waitForFunction(() =>
+    document.querySelector(".rpgup-invite-copy input")?.value.includes("HudTestRoom001"));
+  assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "Salvar não reabre janela antiga");
+  assert.equal(await hudPage.locator('.rpgup-sidebar-pane input[name="roomId"]').inputValue(), "HudTestRoom001");
+  await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
+  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
+  await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").click();
+  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
+  await hudPage.evaluate(() => Hooks.callAll("renderSidebar", ui.sidebar, ui.sidebar.element));
+  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1, "Renderizar a barra não duplica o HUD");
+  await hudPage.screenshot({ path: path.join(screenshotDirectory, "premium-sidebar-hud.png") });
+  assert.deepEqual(hudErrors, []);
+  await hudContext.close();
+  console.log("HUD nativo: convite, cópia visível, categorias, salvar e retorno à sidebar: OK.");
+
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));

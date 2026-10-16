@@ -115,14 +115,14 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
     const qualityHelp = element("p", QUALITY_PRESETS[quality.value].help, { class: "rpgup-help", role: "status" });
     quality.addEventListener("change", () => { qualityHelp.textContent = QUALITY_PRESETS[quality.value].help; });
     const intro = element("div", undefined, { class: "rpgup-intro" });
-    intro.append(element("h2", "Sala da mesa"), element("span", `${users.length} usuários · ${users.filter(user => savedConfig.slots?.[user.id]).length} slots salvos`, { class: "rpgup-badge" }));
+    intro.append(element("h2", "Configurar sala"), element("span", `${users.length} usuários · ${users.filter(user => savedConfig.slots?.[user.id]).length} slots salvos`, { class: "rpgup-badge" }));
     const roomFields = element("div", undefined, { class: "rpgup-grid" });
     roomFields.append(
-      field("Room ID compartilhada", room, "Nome da sala VDO usada por todos os participantes deste World. Use 1–49 letras ou números; maiúsculas fazem diferença. Mudar a Room exige reconectar e atualizar os links OBS."),
+      field("Nome da sala", room, "Nome da sala VDO usada por todos os participantes deste World. Use 1–49 letras ou números; maiúsculas fazem diferença. Mudar a Room exige reconectar e atualizar os links OBS."),
       field("Áudio", audio, "Discord desativa microfone e reprodução de áudio do VDO. Áudio VDO permite seus controles nativos. Todos precisam reconectar após mudar; evite ouvir a mesma voz pelos dois serviços."),
-      field("GM como Director", director, "Escolha um GM para usar o painel de direção no mesmo iframe. Ele começa em Scene Preview; Toggle Director Vision alterna cena/painel. A opção vazia mantém todos como participantes comuns."),
-      field("Qualidade dos vídeos", quality, "Escolha um limite para os vídeos da mesa. Automático mantém o VDO adaptativo. As opções avançadas têm prioridade sobre o preset. Todos precisam aplicar/reconectar após mudar."),
-      field("Layout das câmeras", roomLayout, "Compacto usa cover nativo para preencher as áreas das câmeras, podendo recortar a imagem e o self-preview. Padrão não adiciona layout. Só afeta a Room, inclusive o preview do Director; links OBS não mudam. Salve e aplique/reconecte. Resultado visual depende da Room; parâmetros avançados continuam ativos.")
+      field("Direção da transmissão", director, "Escolha um GM para usar o painel de direção no mesmo iframe. Ele começa em Scene Preview; Toggle Director Vision alterna cena/painel. A opção vazia mantém todos como participantes comuns."),
+      field("Qualidade de vídeo", quality, "Escolha um limite para os vídeos da mesa. Automático mantém o VDO adaptativo. As opções avançadas têm prioridade sobre o preset. Todos precisam aplicar/reconectar após mudar."),
+      field("Organização das câmeras", roomLayout, "Compacto usa cover nativo para preencher as áreas das câmeras, podendo recortar a imagem e o self-preview. Padrão não adiciona layout. Só afeta a Room, inclusive o preview do Director; links OBS não mudam. Salve e aplique/reconecte. Resultado visual depende da Room; parâmetros avançados continuam ativos.")
     );
     const advanced = element("div", undefined, { class: "rpgup-tab-section" });
     advanced.append(
@@ -192,13 +192,13 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
     updateAppearanceHelp();
     repaint();
     appearance.append(
-      field("Tema das bordas", theme, "Selecione um tema para todas as câmeras. Cada jogador mantém a cor escolhida no Foundry."),
+      field("Estilo das câmeras", theme, "Selecione um tema para todas as câmeras. Cada jogador mantém a cor escolhida no Foundry."),
       preview, speechTest, previewNote, appearanceHelp,
       element("p", "Nomes vêm automaticamente do Foundry. O VDO destaca a fala apenas com áudio nativo; no Discord esse recurso fica indisponível. As fontes solo OBS não são modificadas.", { class: "rpgup-help" })
     );
     const table = element("table");
     const head = element("tr");
-    const columns = ["Usuário / label Foundry", "Stream ID estável", "Avatar da mesa", "Solo link OBS", "Entrar pelo navegador"];
+    const columns = ["Jogador", "ID da câmera", "Imagem", "Link para OBS", "Link pessoal"];
     for (const label of columns) head.append(element("th", label, { scope: "col" }));
     const thead = element("thead");
     thead.append(head);
@@ -312,12 +312,12 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
     table.append(thead, body);
     // Never block the GM panel while avatars are prepared for external browser links.
     void Promise.allSettled(pendingJoinLinks.map(start => start()));
-    const generate = button("Gerar e salvar slots faltantes", "fa-wand-magic-sparkles");
+    const generate = button("Criar IDs faltantes", "fa-wand-magic-sparkles");
     tooltip(generate, "Criar IDs somente para usuários que ainda não têm slot e salvar a Room e as associações no World. IDs existentes são preservados.");
     generate.addEventListener("click", async () => {
       if (this._saving) return;
       // A player may have been created after this panel opened.
-      await this.render({ force: true });
+      await this._refreshView();
       const slots = { ...config.slots };
       for (const [userId, input] of this._inputs) slots[userId] = input.value.trim();
       const filled = fillMissingSlots(slots, Array.from(game.users));
@@ -325,7 +325,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
       this._notice.textContent = "Salvando os slots no mundo…";
       try { await this.saveDraft(); } catch (error) { this._notice.textContent = `Não salvo: ${error.message}`; report(error); }
     });
-    const save = button("Salvar configuração", "fa-check", { type: "submit", class: "rpgup-primary" });
+    const save = button("Salvar mudanças", "fa-check", { type: "submit", class: "rpgup-primary" });
     tooltip(save, "Salvar Room, áudio, Director e IDs no World. Usuários aguardando um ID entram na sala; quem já está conectado precisa aplicar/reconectar.");
     const obsNotice = element("p", "Links OBS e links externos usam os valores salvos. Após salvar mudanças de Room, senha ou Stream ID, copie novamente os links.", { role: "status", class: "rpgup-save-status" });
     this._notice = obsNotice;
@@ -333,7 +333,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
       if (event.target.closest(".rpgup-personal-settings")) return;
       obsNotice.textContent = "Há alterações não salvas. Os links OBS e de entrada externa acima ainda correspondem à configuração anterior; salve para atualizar.";
     });
-    const exportLinks = tooltip(button("Baixar links OBS", "fa-download"), "Baixar JSON organizado com nome, ID e solo link de cada usuário associado na configuração salva. É uma lista de URLs para Browser Sources, não uma coleção de cenas OBS.");
+    const exportLinks = tooltip(button("Exportar links OBS", "fa-download"), "Baixar JSON organizado com nome, ID e solo link de cada usuário associado na configuração salva. É uma lista de URLs para Browser Sources, não uma coleção de cenas OBS.");
     exportLinks.addEventListener("click", () => {
       try {
         const value = obsExport(worldConfig(), Array.from(game.users));
@@ -368,12 +368,12 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
         footer.hidden = personalKeys.has(tab);
       },
       tabs: [
-        { key: "general", title: "Sala e qualidade", icon: "fa-house", children: [general] },
-        { key: "participants", title: "Participantes e links", icon: "fa-users", children: [participants] },
-        { key: "appearance", title: "Aparência das câmeras", icon: "fa-palette", children: [appearance] },
-        { key: "audioFilters", title: "Tratamento de áudio", icon: "fa-headphones", children: [audioFiltersPanel] },
-        { key: "advanced", title: "Parâmetros avançados", icon: "fa-sliders", children: [advanced] },
-        { key: "help", title: "Ajuda e primeiros passos", icon: "fa-circle-question", children: [help] },
+        { key: "general", title: "Sala", group: "Mesa", icon: "fa-house", children: [general] },
+        { key: "participants", title: "Participantes", group: "Mesa", icon: "fa-users", children: [participants] },
+        { key: "appearance", title: "Visual", group: "Mesa", icon: "fa-palette", children: [appearance] },
+        { key: "audioFilters", title: "Filtro de áudio", group: "Avançado", icon: "fa-headphones", children: [audioFiltersPanel] },
+        { key: "advanced", title: "Opções VDO", group: "Avançado", icon: "fa-sliders", children: [advanced] },
+        { key: "help", title: "Ajuda", group: "Avançado", icon: "fa-circle-question", children: [help] },
         ...personal.tabs
       ],
       tourSteps: [
@@ -424,7 +424,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
         this._baseConfig = await saveWorld(next);
         this._form = null;
         ui.notifications.info("Room e slots confirmados no mundo. Jogadores sem sala entram automaticamente; participantes conectados podem reconectar.");
-        await this.render({ force: true });
+        await this._refreshView();
       } finally {
         this._saving = false;
         save.disabled = generate.disabled = false;
@@ -435,6 +435,13 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
       try { await this.saveDraft(); } catch (error) { obsNotice.textContent = `Não salvo: ${error.message}`; report(error); }
     });
     return form;
+  }
+
+  async _refreshView() {
+    if (this._sidebarHost?.isConnected) {
+      const form = await this._renderHTML();
+      this._sidebarHost.replaceChildren(form);
+    } else if (this.rendered) await this.render({ force: true });
   }
 
   _replaceHTML(result, content) {
@@ -461,17 +468,18 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
       return;
     }
     this._form = null;
-    this.render({ force: true }).catch(report);
+    this._refreshView().catch(report);
   }
 
   refreshUsers() {
-    if (this._form) this.render({ force: true }).catch(report);
+    if (this._form) this._refreshView().catch(report);
   }
 
   _onClose(options) {
     super._onClose(options);
     this._linksAbort?.abort();
     this._linksAbort = null;
+    this._sidebarHost = null;
     this._form = this._readDraft = this._saveDraft = null;
   }
 }

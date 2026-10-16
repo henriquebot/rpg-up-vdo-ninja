@@ -44,8 +44,18 @@ export function downloadJSON(value, filename) {
 
 export function field(label, control, help) {
   const node = element("label", undefined, { class: "rpgup-field" });
-  node.append(element("span", label), control);
-  if (help) tooltip(control, help);
+  const caption = element("span", undefined, { class: "rpgup-field-caption" });
+  caption.append(element("span", label));
+  if (help) {
+    const info = element("span", undefined, {
+      class: "rpgup-info-icon", role: "img", tabindex: "0",
+      "aria-label": "Ajuda: " + help
+    });
+    info.append(element("i", undefined, { class: "fas fa-circle-info", "aria-hidden": "true" }));
+    tooltip(info, help);
+    caption.append(info);
+  }
+  node.append(caption, control);
   return node;
 }
 

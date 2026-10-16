@@ -33,8 +33,8 @@ export function registerSettings(RoomDock, WorldConfig, onChange) {
     type: Object, default: structuredClone(DEFAULT_WORLD), onChange
   });
   game.settings.registerMenu(MODULE_ID, "worldConfig", {
-    name: "RPGUP VDO.Ninja — Opções", label: "Opções VDO.Ninja",
-    hint: "Mestre: configurações compartilhadas e pessoais. Jogadores: conexão, janela, avatar e ajuda. Dados compartilhados são exclusivos do mestre.",
+    name: "RPGUP VDO.Ninja — HUD", label: "Abrir HUD de câmeras",
+    hint: "Use a aba HUD ao lado de Cenas, Atores e Configurações para acessar todos os controles. Esta janela é um acesso alternativo para o mestre.",
     icon: "fas fa-video", type: WorldConfig, restricted: true
   });
   game.settings.registerMenu(MODULE_ID, "openDock", {

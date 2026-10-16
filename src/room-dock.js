@@ -1,4 +1,4 @@
-import { dockPosition, normalizePrefs } from "./config.js";
+import { MODULE_ID, dockPosition, normalizePrefs } from "./config.js";
 import { participantURL, avatarURLBudget } from "./urls.js";
 import { prepareAvatar } from "./avatar.js";
 import { worldConfig, userPrefs, savePrefs } from "./settings.js";
@@ -24,6 +24,7 @@ export class RoomDock extends ApplicationV2 {
     this.prefs = userPrefs();
     this._saveQueue = Promise.resolve();
     this.onConfigure = async () => {
+      if (game.modules.get(MODULE_ID)?.api?.openHudSidebar?.()) return;
       const panel = new WorldConfig();
       if (panel.rendered) await panel.close();
       else { await panel.render({ force: true }); panel.bringToFront(); }
@@ -40,7 +41,7 @@ export class RoomDock extends ApplicationV2 {
     this._settingsButton = tooltip(element("button", undefined, {
       type: "button", class: "header-control icon fa-solid fa-gear", "data-action": "toggleModuleSettings",
       "aria-label": "Opções VDO.Ninja"
-    }), "Abrir ou fechar a janela única de opções. Câmera e PiP ficam no VDO.Ninja.");
+    }), "Abrir o HUD de câmeras na barra lateral do Foundry. Câmera e PiP ficam no VDO.Ninja.");
     this._undockButton = tooltip(element("button", undefined, {
       type: "button", class: "header-control icon fa-solid fa-up-right-from-square", "data-action": "undock",
       "aria-label": "Desacoplar janela"
@@ -163,7 +164,7 @@ export class RoomDock extends ApplicationV2 {
       this._iframe.allow = "camera; autoplay; fullscreen; display-capture; picture-in-picture" + (world.audio === "vdo" ? "; microphone" : "");
       this._pending = false;
       this._settingsButton.classList.remove("rpgup-attention");
-      tooltip(this._settingsButton, "Abrir ou fechar a janela única de opções do RPGUP VDO.Ninja.");
+      tooltip(this._settingsButton, "Abrir o HUD de câmeras na barra lateral do Foundry.");
       this._alert.hidden = true;
       this._activeURL = url;
       this._iframe.src = url;
@@ -195,7 +196,7 @@ export class RoomDock extends ApplicationV2 {
     }
     this._pending = true;
     this._settingsButton?.classList.add("rpgup-attention");
-    this._status.textContent = "Configuração alterada. Abra Opções VDO.Ninja na aba Configurações e clique em Aplicar / reconectar (a câmera será desconectada).";
+    this._status.textContent = "Configuração alterada. Abra a aba HUD e clique em Aplicar / reconectar (a câmera será desconectada).";
     if (this._settingsButton) tooltip(this._settingsButton, this._status.textContent);
   }
 

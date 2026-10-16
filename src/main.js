@@ -2,7 +2,8 @@ import { MODULE_ID } from "./config.js";
 import { registerSettings, userPrefs } from "./settings.js";
 import { RoomDock } from "./room-dock.js";
 import { WorldConfig } from "./world-config.js";
-import { button, tooltip, report } from "./dom.js";
+import { report } from "./dom.js";
+import { openHudSidebar, refreshHudSidebar, registerHudSidebar } from "./sidebar.js";
 
 export async function openDock() {
   const dock = new RoomDock();
@@ -28,6 +29,7 @@ export async function toggleDock() {
 }
 
 export async function toggleOptions() {
+  if (openHudSidebar()) return null;
   const panel = new WorldConfig();
   if (panel.rendered && panel.element?.isConnected) {
     await panel.close();
@@ -50,8 +52,10 @@ Hooks.once("init", () => {
   registerSettings(RoomDock, WorldConfig, () => {
     WorldConfig.instance?.configChanged();
     RoomDock.instance?.configChanged();
+    refreshHudSidebar();
   });
-  game.modules.get(MODULE_ID).api = Object.freeze({ openDock, toggleDock, toggleOptions, dock: () => RoomDock.instance });
+  registerHudSidebar();
+  game.modules.get(MODULE_ID).api = Object.freeze({ openDock, toggleDock, toggleOptions, openHudSidebar, dock: () => RoomDock.instance });
 });
 
 Hooks.once("ready", () => {
@@ -71,21 +75,22 @@ Hooks.on("createUser", () => WorldConfig.instance?.refreshUsers());
 Hooks.on("deleteUser", () => WorldConfig.instance?.refreshUsers());
 Hooks.on("userConnected", () => WorldConfig.instance?.refreshUsers());
 
+// Earlier Foundry builds (and the offline fixture) may not expose a sidebar
+// mount point. Keep an unobtrusive settings-tab fallback only in that case.
 Hooks.on("renderSettings", (app, html) => {
+  if (ui.sidebar?.element || document.querySelector("#sidebar-tabs")) return;
   const root = html?.querySelector ? html : html?.[0];
   if (!root || root.querySelector(".rpgup-open-dock")) return;
-  const open = tooltip(
-    button("Câmeras VDO.Ninja", "fa-video", { class: "rpgup-open-dock", "aria-pressed": "false" }),
-    "Um clique abre a dock; outro clique fecha as câmeras."
-  );
-  open.addEventListener("click", () => toggleDock().catch(report));
-
-  const options = tooltip(
-    button("Opções VDO.Ninja", "fa-gear", { class: "rpgup-open-dock-options" }),
-    "Abrir ou fechar a janela única de opções VDO.Ninja, sem reconectar a chamada."
-  );
+  const cameras = document.createElement("button");
+  cameras.type = "button";
+  cameras.className = "rpgup-open-dock";
+  cameras.textContent = "Câmeras VDO.Ninja";
+  cameras.addEventListener("click", () => toggleDock().catch(report));
+  const options = document.createElement("button");
+  options.type = "button";
+  options.className = "rpgup-open-dock-options";
+  options.textContent = "Opções VDO.Ninja";
   options.addEventListener("click", () => toggleOptions().catch(report));
-
-  (root.querySelector("section.settings") ?? root).append(open, options);
+  (root.querySelector("section.settings") ?? root).append(cameras, options);
   syncDockButton();
 });
