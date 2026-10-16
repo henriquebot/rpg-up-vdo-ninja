@@ -36,13 +36,20 @@ async function openSettings(page) {
 }
 async function dockTab(page, key) {
   await openSettings(page);
-  await page.locator(`#rpgup-world-tab-${key}`).click();
+  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  if (!await tab.isVisible()) {
+    await page.getByRole("button", { name: "Minha câmera", exact: true }).click();
+  }
+  await tab.click();
 }
 async function worldTab(page, key) {
   await openSettings(page);
   const tab = page.locator(`#rpgup-world-tab-${key}`);
-  if (await tab.isVisible()) await tab.click();
-  else await tab.evaluate(element => element.click()); // Nested category is currently collapsed.
+  if (!await tab.isVisible()) {
+    const group = ["general", "participants", "appearance"].includes(key) ? "Mesa" : "Avançado";
+    await page.getByRole("button", { name: group, exact: true }).click();
+  }
+  await tab.click();
 }
 try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
