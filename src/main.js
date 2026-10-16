@@ -75,5 +75,22 @@ Hooks.on("createUser", () => WorldConfig.instance?.refreshUsers());
 Hooks.on("deleteUser", () => WorldConfig.instance?.refreshUsers());
 Hooks.on("userConnected", () => WorldConfig.instance?.refreshUsers());
 
-// Options now live in the sidebar HUD. Native Foundry settings menus remain
-// available as compatibility entry points, without duplicate injected buttons.
+// Earlier Foundry builds (and the offline fixture) may not expose a sidebar
+// mount point. Keep an unobtrusive settings-tab fallback only in that case.
+Hooks.on("renderSettings", (app, html) => {
+  if (ui.sidebar?.element || document.querySelector("#sidebar-tabs")) return;
+  const root = html?.querySelector ? html : html?.[0];
+  if (!root || root.querySelector(".rpgup-open-dock")) return;
+  const cameras = document.createElement("button");
+  cameras.type = "button";
+  cameras.className = "rpgup-open-dock";
+  cameras.textContent = "Câmeras VDO.Ninja";
+  cameras.addEventListener("click", () => toggleDock().catch(report));
+  const options = document.createElement("button");
+  options.type = "button";
+  options.className = "rpgup-open-dock-options";
+  options.textContent = "HUD VDO.Ninja";
+  options.addEventListener("click", () => toggleOptions().catch(report));
+  (root.querySelector("section.settings") ?? root).append(cameras, options);
+  syncDockButton();
+});
