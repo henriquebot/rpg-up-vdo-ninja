@@ -318,7 +318,7 @@ try {
   await page.getByRole("combobox", { name: "roomLayout", exact: true }).selectOption("compact");
   await worldTab(page, "participants");
   await page.getByRole("textbox", { name: "Avatar da mesa de Jogador A", exact: true }).fill("/tests/users/avatar-gm.webp");
-  await page.getByRole("button", { name: "Salvar configuração", exact: true }).click();
+  await page.getByRole("button", { name: "Salvar mudanças", exact: true }).click();
   await page.waitForFunction(() => fixture.config().audio === "vdo");
   assert.equal((await page.evaluate(() => fixture.config())).quality, "economy");
   assert.equal((await page.evaluate(() => fixture.config())).audioFilters.preset, "enhanced");
@@ -340,7 +340,7 @@ try {
   assert.ok(updatedJoin.href.length <= 6900);
   assert.ok(updatedJoin.searchParams.get("avatar").startsWith("data:image/"), "Avatar Foundry da mesa incorporado funciona no navegador externo");
   const obsDownload = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Baixar links OBS", exact: true }).click();
+  await page.getByRole("button", { name: "Exportar links OBS", exact: true }).click();
   const downloadedLinks = await obsDownload;
   const exportedLinks = JSON.parse(await readFile(await downloadedLinks.path(), "utf8"));
   assert.equal(exportedLinks.sources.length, 3);
@@ -438,12 +438,12 @@ try {
   assert.match(await guest.locator(".rpgup-connection-alert").innerText(), /GM ainda não associou/);
   await page.evaluate(() => fixture.menu("worldConfig"));
   await worldTab(page, "participants");
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   await page.waitForFunction(() => fixture.config().slots.p1 && fixture.config().slots.p2);
   const generated = await page.evaluate(() => fixture.config().slots);
   await guest.waitForFunction(() => document.querySelector("iframe"));
   assert.equal(new URL(await guest.locator("iframe").getAttribute("src")).searchParams.get("push"), generated.p1);
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   assert.deepEqual(await page.evaluate(() => fixture.config().slots), generated);
   await page.getByRole("textbox", { name: "Stream ID de Jogador A", exact: true }).fill("player_custom");
   await page.evaluate(() => fixture.menu("worldConfig"));
@@ -468,7 +468,7 @@ try {
   await worldTab(page, "participants");
   await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).fill("unsaved_b");
   await page.evaluate(() => fixture.setConfig({ ...fixture.config(), roomId: "OtherGMRoom" }));
-  await page.getByRole("button", { name: "Salvar configuração", exact: true }).click();
+  await page.getByRole("button", { name: "Salvar mudanças", exact: true }).click();
   await page.waitForFunction(() => notices.some(notice => notice.value.includes("Outro GM")));
   assert.equal((await page.evaluate(() => fixture.config().slots)).p2, generated.p2);
   assert.equal(await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).inputValue(), "unsaved_b");
@@ -477,7 +477,7 @@ try {
   await worldTab(page, "participants");
   await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).fill("");
   await page.evaluate(() => { fixture.failSave = true; });
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   await page.waitForFunction(() => notices.some(notice => notice.value.includes("gravação recusada")));
   assert.equal((await page.evaluate(() => fixture.config().slots)).p2, generated.p2);
   assert.match(await page.locator(".rpgup-config-form .rpgup-save-status").innerText(), /Não salvo/);
@@ -494,7 +494,7 @@ try {
   });
   await page.getByRole("textbox", { name: "Stream ID de Jogador criado depois", exact: true }).waitFor();
   assert.equal(await page.getByRole("textbox", { name: "Stream ID de Jogador B", exact: true }).inputValue(), "membership_draft");
-  await page.getByRole("button", { name: "Gerar e salvar slots faltantes", exact: true }).click();
+  await page.getByRole("button", { name: "Criar IDs faltantes", exact: true }).click();
   await page.waitForFunction(() => fixture.config().slots.replacement && fixture.config().slots.p2 === "membership_draft");
   await page.evaluate(() => fixture.closeConfig());
   console.log("Usuário criado com painel aberto: lista atualizada, rascunho preservado e slot salvo: OK.");
