@@ -650,7 +650,17 @@ try {
     sidebar.style.cssText = "position:absolute;right:0;top:0;width:340px;height:800px;display:flex;flex-direction:column;background:#24262d;";
     const tabs = document.createElement("nav");
     tabs.id = "sidebar-tabs";
-    tabs.innerHTML = '<button class="sidebar-tab active" type="button" data-tab="settings" aria-selected="true">Configurações</button>';
+    // Foundry v14's nav has an internal tab rail alongside other controls.
+    // Appending to the outer nav would create a second (floating) column.
+    tabs.style.cssText = "display:flex;flex-direction:row;align-items:flex-start;width:100px;gap:10px;";
+    const nativeRail = document.createElement("div");
+    nativeRail.className = "sidebar-tabs-rail";
+    nativeRail.style.cssText = "display:flex;flex-direction:column;flex:0 0 42px;gap:4px;";
+    nativeRail.innerHTML = '<button class="sidebar-tab" style="height:36px;width:42px" type="button" data-tab="chat" aria-selected="false">Chat</button><button class="sidebar-tab active" style="height:36px;width:42px" type="button" data-tab="settings" aria-selected="true">Configurações</button>';
+    const auxiliary = document.createElement("div");
+    auxiliary.className = "sidebar-tabs-auxiliary";
+    auxiliary.textContent = "Outros controles";
+    tabs.append(nativeRail, auxiliary);
     const content = document.createElement("div");
     content.id = "sidebar-content";
     content.style.cssText = "flex:1;min-height:0;";
@@ -661,6 +671,16 @@ try {
     Hooks.callAll("renderSidebar", ui.sidebar, sidebar);
   });
   assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1);
+  assert.equal(await hudPage.locator("#sidebar-tabs .sidebar-tabs-rail > .rpgup-hud-tab").count(), 1,
+    "O HUD deve ser irmão das abas nativas dentro da coluna de ícones");
+  const nativeBounds = await hudPage.locator('#sidebar-tabs [data-tab="settings"]').boundingBox();
+  const hudBounds = await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").boundingBox();
+  assert.ok(Math.abs(nativeBounds.x - hudBounds.x) <= 1,
+    "O HUD precisa ficar na mesma coordenada horizontal de Configurações, não flutuar sobre o mapa");
+  assert.ok(Math.abs(nativeBounds.width - hudBounds.width) <= 1,
+    "O HUD deve herdar a largura do botão nativo");
+  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab > i.fa-headset").count(), 1,
+    "Ícone de headset discreto e consistente com os demais");
   assert.equal(await hudPage.locator("#sidebar-content .rpgup-sidebar-pane").count(), 1);
   await hudPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
