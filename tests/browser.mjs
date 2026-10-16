@@ -120,9 +120,9 @@ try {
   assert.ok(initialURL.length <= 6900, "Nunca enviar request URI grande o bastante para o nginx responder 414");
   assert.equal(await page.locator('[name="Câmera padrão"], [name="Interface VDO"], [name="Self-preview"]').count(), 0);
   await dockTab(page, "window");
-  assert.match(await page.getByRole("checkbox").getAttribute("title"), /não liga sua câmera/i);
+  assert.match(await page.locator('.rpgup-personal-window .rpgup-field:has(input[type="checkbox"]) .rpgup-info-icon').getAttribute("title"), /não liga sua câmera/i);
   await dockTab(page, "avatar");
-  assert.match(await page.getByRole("combobox", { name: "Placeholder", exact: true }).getAttribute("data-tooltip"), /cada sessão/);
+  assert.match(await page.locator('.rpgup-personal-avatar .rpgup-field:has(select[name="Placeholder"]) .rpgup-info-icon').getAttribute("data-tooltip"), /cada sessão/);
   await dockTab(page, "window");
   assert.equal((await page.locator("iframe").getAttribute("allow")).includes("microphone"), false);
   assert.equal(await page.locator("iframe").getAttribute("sandbox"), null);
@@ -288,7 +288,7 @@ try {
   assert.equal(await page.locator("iframe").getAttribute("src"), beforeDraftReload);
   await page.getByRole("textbox", { name: "Stream ID de Jogador A", exact: true }).fill("slot_a");
   await worldTab(page, "general");
-  assert.match(await page.getByRole("combobox", { name: "directorUserId", exact: true }).getAttribute("data-tooltip"), /Scene Preview/);
+  assert.match(await page.locator('.rpgup-field:has(select[name="directorUserId"]) .rpgup-info-icon').getAttribute("data-tooltip"), /Scene Preview/);
   await worldTab(page, "participants");
   assert.equal(await page.getByRole("textbox", { name: "Solo link OBS", exact: false }).count(), 3);
   await page.waitForFunction(() => document.querySelector('input[aria-label="Link de entrada no navegador de Jogador A"]')?.value.startsWith("https://vdo.ninja/"));
