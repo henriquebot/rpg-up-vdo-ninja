@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { fillMissingSlots, validateWorld, parseExtraQuery, normalizePrefs, dockPosition, suggestRoomId, validateAudioFilters, audioFilterPreset } from "../src/config.js";
-import { participantURL, soloURL, obsExport } from "../src/urls.js";
+import { participantURL, soloURL, obsExport, roomInviteURL } from "../src/urls.js";
 import { themeCSS, foundryUserColor, themeVisual } from "../src/theme.js";
 import { VDO_OPTIONS } from "../src/advanced-options.js";
 
@@ -321,4 +321,20 @@ test("rejeita configurações de áudio inválidas sem permitir alterar a Room o
   assert.throws(() => validateWorld({ ...world, audioFilters: [] }, users), /Filtros/);
   assert.equal(new URL(participantURL({ ...world, audio: "vdo" }, users[1], {}, users)).searchParams.get("push"), world.slots.p1);
   assert.throws(() => parseExtraQuery("noaudio=1"), /não permitido/);
+});
+
+test("convite geral da sala não reaproveita identidade individual e preserva senha", () => {
+  const url = new URL(roomInviteURL(world, users));
+  assert.equal(url.origin, "https://vdo.ninja");
+  assert.equal(url.searchParams.get("room"), world.roomId);
+  assert.equal(url.searchParams.get("password"), "Private123");
+  assert.equal(url.searchParams.get("audiodevice"), "0");
+  assert.equal(url.searchParams.has("noaudio"), true);
+  for (const key of ["push", "view", "director", "label", "avatar", "base64css"])
+    assert.equal(url.searchParams.has(key), false, key);
+  const native = new URL(roomInviteURL({ ...world, audio: "vdo" }, users));
+  assert.equal(native.searchParams.has("noaudio"), false);
+  assert.equal(native.searchParams.has("audiodevice"), false);
+  assert.equal(new URL(roomInviteURL({ ...world, extraQuery: "" }, users)).searchParams.has("password"), false);
+  assert.throws(() => roomInviteURL({ ...world, roomId: "" }, users), /Room ID/);
 });
