@@ -89,7 +89,7 @@ Hooks.on("renderSettings", (app, html) => {
   const options = document.createElement("button");
   options.type = "button";
   options.className = "rpgup-open-dock-options";
-  options.textContent = "HUD VDO.Ninja";
+  options.textContent = "Opções VDO.Ninja";
   options.addEventListener("click", () => toggleOptions().catch(report));
   (root.querySelector("section.settings") ?? root).append(cameras, options);
   syncDockButton();
