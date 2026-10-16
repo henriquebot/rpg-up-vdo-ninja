@@ -248,21 +248,13 @@ body.rpgup-vdo-docked #interface {
 .rpgup-vdo .rpgup-config-form button.rpgup-primary { color: #fff5e7; }
 
 
-/* Premium HUD: a real sidebar-positioned tab with no floating settings overlay. */
-#sidebar-tabs .rpgup-hud-tab {
-  position: relative;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 36px;
-  min-height: 36px;
-  cursor: pointer;
-}
+/* Inherit the full native Foundry sidebar-tab appearance and dimensions.
+   The HUD trigger is inserted inside the same icon rail as native tabs. */
+#sidebar-tabs .rpgup-hud-tab { cursor: pointer; }
 #sidebar-tabs .rpgup-hud-tab > i { margin: 0; }
 #sidebar-tabs .rpgup-hud-tab.active,
 #sidebar-tabs .rpgup-hud-tab[aria-selected="true"] {
   color: var(--color-text-emphatic, #f5d6a6);
-  box-shadow: inset 0 -2px 0 currentColor;
 }
 /* Only when our tab is active: leave native panes untouched when switching back. */
 .rpgup-hud-active > :not(.rpgup-sidebar-pane) { display: none !important; }
