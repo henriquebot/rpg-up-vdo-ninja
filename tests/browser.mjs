@@ -40,7 +40,9 @@ async function dockTab(page, key) {
 }
 async function worldTab(page, key) {
   await openSettings(page);
-  await page.locator(`#rpgup-world-tab-${key}`).click();
+  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  if (await tab.isVisible()) await tab.click();
+  else await tab.evaluate(element => element.click()); // Nested category is currently collapsed.
 }
 try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
@@ -624,6 +626,62 @@ try {
   assert.equal(await page.locator("body").evaluate(node => node.classList.contains("rpgup-vdo-docked")), false);
   assert.equal(await page.locator("body").evaluate(node => node.style.getPropertyValue("--rpgup-vdo-left")), "");
   console.log("Janela única, separação GM/jogador, posição, zoom, avatar, iframe e resize: OK.");
+
+  // Sidebar navigation simulation: no floating configuration window, full
+  // controls hosted in the same column as native Chat/Scenes/Actors tabs.
+  const hudContext = await browser.newContext({ viewport: { width: 1280, height: 840 } });
+  await hudContext.route("https://vdo.ninja/**", route =>
+    route.fulfill({ contentType: "text/html", body: "<p>VDO fixture</p>" }));
+  const hudPage = await hudContext.newPage();
+  const hudErrors = [];
+  hudPage.on("pageerror", error => hudErrors.push(error.message));
+  await hudPage.goto(base + "/tests/harness.html");
+  await hudPage.waitForFunction(() => globalThis.fixtureReady);
+  await hudPage.evaluate(() => {
+    const sidebar = document.createElement("section");
+    sidebar.id = "sidebar";
+    sidebar.style.cssText = "position:absolute;right:0;top:0;width:340px;height:800px;display:flex;flex-direction:column;background:#24262d;";
+    const tabs = document.createElement("nav");
+    tabs.id = "sidebar-tabs";
+    tabs.innerHTML = '<button class="sidebar-tab active" type="button" data-tab="settings" aria-selected="true">Configurações</button>';
+    const content = document.createElement("div");
+    content.id = "sidebar-content";
+    content.style.cssText = "flex:1;min-height:0;";
+    content.innerHTML = '<section class="native-settings">Painel original</section>';
+    sidebar.append(tabs, content);
+    document.body.append(sidebar);
+    ui.sidebar = { element: sidebar, expand() { return Promise.resolve(); } };
+    Hooks.callAll("renderSidebar", ui.sidebar, sidebar);
+  });
+  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1);
+  assert.equal(await hudPage.locator("#sidebar-content .rpgup-sidebar-pane").count(), 1);
+  await hudPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
+  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
+  assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "HUD não cria janela separada");
+  assert.match(await hudPage.locator(".rpgup-invite-copy input").inputValue(), /room=FixtureRoom123/);
+  assert.equal(await hudPage.locator(".rpgup-invite-copy button").isEnabled(), true);
+  assert.equal(await hudPage.locator(".rpgup-group-button").count(), 3);
+  await hudPage.getByRole("button", { name: "Avançado", exact: true }).click();
+  assert.equal(await hudPage.locator("#rpgup-world-tab-audioFilters").isVisible(), true);
+  await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
+  assert.equal(await hudPage.locator("#rpgup-world-tab-general").isVisible(), true);
+  await hudPage.locator('.rpgup-sidebar-pane input[name="roomId"]').fill("HudTestRoom001");
+  await hudPage.locator(".rpgup-sidebar-pane .rpgup-config-footer button[type=submit]").click();
+  await hudPage.waitForFunction(() =>
+    document.querySelector(".rpgup-invite-copy input")?.value.includes("HudTestRoom001"));
+  assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "Salvar não reabre janela antiga");
+  assert.equal(await hudPage.locator('.rpgup-sidebar-pane input[name="roomId"]').inputValue(), "HudTestRoom001");
+  await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
+  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
+  await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").click();
+  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
+  await hudPage.evaluate(() => Hooks.callAll("renderSidebar", ui.sidebar, ui.sidebar.element));
+  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1, "Renderizar a barra não duplica o HUD");
+  await hudPage.screenshot({ path: path.join(screenshotDirectory, "premium-sidebar-hud.png") });
+  assert.deepEqual(hudErrors, []);
+  await hudContext.close();
+  console.log("HUD nativo: convite, cópia visível, categorias, salvar e retorno à sidebar: OK.");
+
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));
