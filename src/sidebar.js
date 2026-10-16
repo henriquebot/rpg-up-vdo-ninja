@@ -58,22 +58,30 @@ function install() {
   const { root, nav, content } = found;
   if (mounted?.root === root && mounted.panel.isConnected && mounted.trigger.isConnected) return mounted;
 
-  // Copy the structural element of a native tab to inherit the current Foundry
-  // sidebar layout (including third-party skins and V13/V14 button shapes).
+  // V13/V14 split the sidebar navigation into internal groups. Adding a
+  // tab directly to #sidebar-tabs creates a *new column* outside the icon
+  // rail. Keep it as a sibling of an existing tab in the same native group.
   const nativeTab = nav.querySelector('[data-tab="settings"]') ?? nav.querySelector("[data-tab]");
-  const trigger = nativeTab?.cloneNode(false) ?? element("button");
+  if (!nativeTab?.parentElement) return null;
+  const trigger = nativeTab.cloneNode(false);
   trigger.removeAttribute("id");
   trigger.removeAttribute("data-action");
   trigger.removeAttribute("aria-controls");
+  trigger.removeAttribute("data-tooltip");
+  trigger.removeAttribute("data-tooltip-text");
+  trigger.removeAttribute("aria-describedby");
   trigger.dataset.tab = TAB;
   trigger.classList.remove("active", "selected");
   trigger.classList.add("rpgup-hud-tab");
-  trigger.setAttribute("type", "button");
+  if (trigger.tagName === "BUTTON") trigger.type = "button";
+  else if (trigger.tagName === "A") trigger.removeAttribute("href");
   trigger.setAttribute("aria-label", "HUD de câmeras");
   trigger.setAttribute("aria-selected", "false");
-  trigger.replaceChildren(element("i", undefined, { class: "fas fa-video", "aria-hidden": "true" }));
+  trigger.replaceChildren(element("i", undefined, { class: "fa-solid fa-headset", "aria-hidden": "true" }));
   tooltip(trigger, "HUD de câmeras · RPGUP VDO.Ninja");
-  nav.append(trigger);
+  // Insert before Settings so it appears inside the existing left icon stack
+  // even when native sidebar groups have their own grid/flex layout.
+  nativeTab.before(trigger);
 
   const panel = element("section", undefined, {
     class: "rpgup-vdo rpgup-sidebar-pane", role: "tabpanel",
