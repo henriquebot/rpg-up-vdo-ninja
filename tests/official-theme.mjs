@@ -84,5 +84,60 @@ try {
   });
   assert.equal(accepted, true, "Official VDO.Ninja iframe must accept its documented style postMessage command");
   await host.close();
+  // Regression from a live user screenshot: selecting adaptive must hide the
+  // branding and pack video tiles in the *real upstream VDO document*.
+  // Synthetic DOM tiles exercise layout; they are NOT claimed as real WebRTC
+  // participants. This avoids mistaking a working API for a working grid.
+  const fitPage = await context.newPage();
+  const fitURL = new URL("https://vdo.ninja/");
+  fitURL.searchParams.set("room", "RPGUPAdaptiveSmoke");
+  fitURL.searchParams.set("scene", "");
+  fitURL.searchParams.set("fakeguests", "2");
+  fitURL.searchParams.set("videodevice", "0");
+  fitURL.searchParams.set("audiodevice", "0");
+  fitURL.searchParams.set("noaudio", "");
+  fitURL.searchParams.set("showheader", "");
+  fitURL.searchParams.set("base64css", encodeThemeCSS(presentationCSS("adaptive")));
+  assert.ok(fitURL.href.length < 6900, "Presentation CSS URL must stay within safe limit");
+  await fitPage.setViewportSize({ width: 252, height: 850 });
+  const fitResponse = await fitPage.goto(fitURL.href, { waitUntil: "domcontentloaded", timeout: 40000 });
+  assert.equal(fitResponse?.status(), 200);
+  await fitPage.locator("#gridlayout").waitFor({ state: "attached" });
+  const layout = await fitPage.evaluate(() => {
+    const grid = document.querySelector("#gridlayout");
+    const title = document.querySelector("#logoname");
+    const results = [];
+    for (const n of [2, 4, 6, 8]) {
+      grid.replaceChildren();
+      for (let i = 0; i < n; i++) {
+        const tile = document.createElement("div");
+        tile.className = "vidcon";
+        tile.appendChild(document.createElement("video"));
+        tile.querySelector("video").className = "tile";
+        grid.append(tile);
+      }
+      const boxes = [...grid.children].map(el => el.getBoundingClientRect().toJSON());
+      results.push({
+        n,
+        display: getComputedStyle(grid).display,
+        cardHeight: boxes[0]?.height,
+        visible: boxes.every(box => box.width > 0 && box.height > 15 && box.top >= 0 && box.bottom <= innerHeight - 28),
+        rowsSeparate: boxes.every((box, i) => i === 0 || box.top >= boxes[i - 1].bottom - 2),
+        scrollbar: grid.scrollHeight > grid.clientHeight + 3
+      });
+    }
+    return { hiddenBrand: getComputedStyle(title).display === "none", results };
+  });
+  assert.equal(layout.hiddenBrand, true, "Minimal header must hide VDO branding in the real VDO page");
+  for (const record of layout.results) {
+    assert.equal(record.display, "grid");
+    assert.equal(record.visible, true, `All ${record.n} camera tiles fit the viewport`);
+    assert.equal(record.rowsSeparate, true, `No spaced-out camera tiles at ${record.n} feeds`);
+    assert.equal(record.scrollbar, false, `No forced grid scrollbar at ${record.n} feeds`);
+  }
+  assert.ok(layout.results[0].cardHeight > layout.results[3].cardHeight,
+    "Eight participants must get smaller tiles than two participants");
+  await fitPage.close();
+  console.log("Official VDO responsive CSS geometry OK:", JSON.stringify(layout));
   console.log("Official VDO CSS and meter parse smoke OK:", JSON.stringify(result));
 } finally { await browser.close(); }
