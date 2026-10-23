@@ -36,6 +36,11 @@ export function createPersonalTabs() {
   const connection = box("rpgup-personal-connect");
   const connectionHelp = element("p", "As opções pessoais são salvas para seu usuário Foundry. A sala é configurada pelo mestre.", { class: "rpgup-help" });
   const connectionStatus = element("p", "", { class: "rpgup-status", role: "status" });
+  const reportReconnect = message => {
+    connectionStatus.textContent = message;
+    const hud = document.querySelector(".rpgup-sidebar-pane:not([hidden]) .rpgup-hud-apply-status");
+    if (hud) hud.textContent = message;
+  };
   const reconnect = tooltip(button("Aplicar / reconectar", "fa-check", { class: "rpgup-primary" }),
     "Aplica a sala e o avatar atuais, reiniciando a conexão VDO e sua câmera.");
   const reload = tooltip(button("Recarregar sala VDO", "fa-rotate-right"),
@@ -52,12 +57,12 @@ export function createPersonalTabs() {
     else ui.notifications.warn("Abra a dock para conectar à sala.");
   }
   reconnect.addEventListener("click", () => {
-    connectionStatus.textContent = "Aplicando preferências e reconectando a sala…";
+    reportReconnect("Aplicando preferências e reconectando a sala…");
     void withDock(async dock => {
       await dock._connect();
       refreshAvatarPreview();
-      connectionStatus.textContent = "Reconexão solicitada. Ative sua câmera no VDO.Ninja.";
-    }).catch(error => { connectionStatus.textContent = String(error.message ?? error); report(error); });
+      reportReconnect("Reconexão solicitada. Ative sua câmera no VDO.Ninja.");
+    }).catch(error => { reportReconnect(String(error.message ?? error)); report(error); });
   });
   reload.addEventListener("click", () => {
     void withDock(dock => dock._reloadRoom()).catch(report);

@@ -14,15 +14,18 @@ const decodeCSS = source => {
 
 test("original é padrão por jogador, sempre reversível", () => {
   assert.deepEqual(Object.keys(DOCK_PRESENTATIONS), ["native", "minimal", "adaptive"]);
-  assert.equal(normalizePrefs({}).presentation, "native");
-  assert.equal(normalizePrefs({ presentation: "invalid" }).presentation, "native");
+  assert.equal(normalizePrefs({}).presentation, "adaptive");
+  assert.equal(normalizePrefs({ schemaVersion: 3, presentation: "native" }).presentation, "adaptive", "Migrates saved old defaults for existing players");
+  assert.equal(normalizePrefs({ schemaVersion: 4, presentation: "native" }).presentation, "native", "Respects explicit opt-out after migration");
+  assert.equal(normalizePrefs({ schemaVersion: 3, presentation: "minimal" }).presentation, "minimal", "Preserves deliberate minimal header");
+  assert.equal(normalizePrefs({ presentation: "invalid" }).presentation, "adaptive");
   assert.equal(normalizePrefs({ presentation: "adaptive" }).presentation, "adaptive");
   assert.equal(presentationCSS("native"), "");
   assert.throws(() => presentationCSS("invalid"), /inválida/);
 });
 
 test("cabeçalho compacto é carregado com a sala sem apagar indicadores ou controles", () => {
-  const baseline = decodeCSS(participantURL(world, gm, { avatar: "none" }, [gm]));
+  const baseline = decodeCSS(participantURL(world, gm, { schemaVersion: 4, avatar: "none", presentation: "native" }, [gm]));
   const css = decodeCSS(participantURL(world, gm, { avatar: "none", presentation: "minimal" }, [gm]));
   assert.match(css, /#logoname/);
   assert.match(css, /#head2/);
@@ -40,15 +43,15 @@ test("adaptativo atinge filhos reais do mosaico e calcula altura no iframe", () 
   assert.match(css, /\.container_holder_video>\.holder/);
   assert.match(css, /100dvh/);
   assert.match(css, /100vw/);
-  assert.match(css, /:has\(>\.container_holder_video:nth-child\(6\)\)/);
-  assert.match(css, /--rg-count/);
+  assert.match(css, /:has\(>:nth-child\(6\)\)/);
+  assert.match(css, /--n:/);
   assert.match(css, /object-fit:contain/);
   assert.doesNotMatch(css, /#controlButtons|#mutebutton|#hangupbutton/);
   assert.equal(presentationCSS("adaptive", { director: true }), "");
 });
 
 test("URL nativa e exportações OBS preservadas, apresentações continuam individuais", () => {
-  const native = participantURL(world, gm, { avatar: "none" }, [gm]);
+  const native = participantURL(world, gm, { schemaVersion: 4, avatar: "none", presentation: "native" }, [gm]);
   for (const presentation of ["minimal", "adaptive"]) {
     const modified = participantURL(world, gm, { avatar: "none", presentation }, [gm]);
     assert.notEqual(modified, native, "O estilo deve estar presente já no carregamento VDO");
@@ -56,7 +59,7 @@ test("URL nativa e exportações OBS preservadas, apresentações continuam indi
     assert.ok(modified.length <= 6900);
   }
   const directorWorld = { ...world, directorUserId: "gm" };
-  const originalDirector = participantURL(directorWorld, gm, { avatar: "none" }, [gm]);
+  const originalDirector = participantURL(directorWorld, gm, { schemaVersion: 4, avatar: "none", presentation: "native" }, [gm]);
   const adaptiveDirector = participantURL(directorWorld, gm, { avatar: "none", presentation: "adaptive" }, [gm]);
   assert.equal(originalDirector, adaptiveDirector, "Director mantém interface oficial");
   const obs = soloURL(world, gm.id, [gm]);

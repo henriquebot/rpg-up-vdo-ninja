@@ -117,7 +117,7 @@ try {
     await img.decode();
     return [img.naturalWidth, img.naturalHeight];
   }, new URL(initialURL).searchParams.get("avatar"));
-  assert.ok(preparedDimensions[0] >= 384 && preparedDimensions[1] >= 384, "Avatar de alta resolução não pode encolher indevidamente");
+  assert.ok(preparedDimensions[0] >= 256 && preparedDimensions[1] >= 256, "No modo adaptativo, avatar ainda precisa cobrir a largura usual da dock sem estourar a URL");
   assert.ok(initialURL.length <= 6900, "Nunca enviar request URI grande o bastante para o nginx responder 414");
   assert.equal(await page.locator('[name="Câmera padrão"], [name="Interface VDO"], [name="Self-preview"]').count(), 0);
   await dockTab(page, "window");
@@ -713,9 +713,29 @@ try {
   assert.match(await hudPage.locator(".rpgup-invite-copy input").inputValue(), /room=FixtureRoom123/);
   assert.equal(await hudPage.locator(".rpgup-invite-copy button").isEnabled(), true);
   assert.equal(await hudPage.locator(".rpgup-group-button").count(), 3);
+  const persistentApply = hudPage.getByRole("button", { name: "Aplicar alterações e reconectar VDO" });
+  assert.equal(await persistentApply.count(), 1, "Exactly one persistent HUD apply control");
+  assert.equal(await persistentApply.isVisible(), true);
+  await hudPage.getByRole("button", { name: "Minha câmera", exact: true }).click();
+  await hudPage.getByRole("tab", { name: "Janela", exact: true }).click();
+  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Janela");
+  await hudPage.getByRole("tab", { name: "Avatar", exact: true }).click();
+  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Avatar");
+  await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
+  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Mesa too");
+  // Fresh installs and existing v3 profiles should default to adaptive.
+  // A post-migration explicit Original choice still remains reversible.
+  await hudPage.evaluate(async () => {
+    const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
+    dock.prefs.presentation = "native";
+    await dock._connect({ saveDraft: false });
+  });
+  const nativeURL = await hudPage.locator("iframe").getAttribute("src");
+  assert.equal(new URL(nativeURL).searchParams.has("base64css") &&
+    decodeURIComponent(atob(new URL(nativeURL).searchParams.get("base64css"))).includes("#gridlayout"),
+    false, "Explicit native mode must not include adaptive grid");
   // Presentation CSS must travel in the VDO URL *before* the room starts.
   // Reconnection/reversion must preserve the stream and the original mode.
-  const nativeURL = await hudPage.locator("iframe").getAttribute("src");
   await hudPage.evaluate(async () => {
     const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
     dock.prefs.presentation = "adaptive";
@@ -763,9 +783,10 @@ try {
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
   await hudPage.locator("#sidebar-tabs [data-tab=chat]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
-  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches.at(-1)),
-    { tabName: "chat", group: "sidebar" },
-    "HUD must force Foundry native transition even when the target differs");
+  assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.sidebar), "chat",
+    "Native sidebar's original event handler must receive and complete the Chat click");
+  assert.equal(await hudPage.evaluate(() => nativeForcedSwitches.at(-1)?.tabName), "settings",
+    "Different tabs must use their native Foundry handler, not a forced duplicate navigation");
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
   await hudPage.locator("#native-options-test").click();

@@ -123,7 +123,7 @@ test("OBS gera solo/view do slot certo, com Room/senha e sem publicar nem captur
 test("preferências e geometria são normalizadas sem escapar da viewport", () => {
   assert.equal(normalizePrefs({ dock: "invalid", preview: "network", sideWidth: NaN }).dock, "left");
   assert.equal(normalizePrefs({}).dock, "left");
-  assert.equal(normalizePrefs({}).schemaVersion, 3);
+  assert.equal(normalizePrefs({}).schemaVersion, 4);
   for (const dock of ["left", "right", "top", "bottom", "floating"]) {
     for (const [width, height] of [[1920, 1080], [360, 640], [250, 200]]) {
       const pos = dockPosition({ dock, floating: { width: 2400, height: 1800, left: 9999, top: 9999 } }, { width, height });
@@ -221,7 +221,7 @@ test("temas usam cores Foundry e o destaque de fala nativo do VDO", () => {
   assert.match(css, /slot_a81k2/);
   assert.doesNotMatch(css, /data-speaking/);
   const vdo = { ...world, audio: "vdo", theme: "neon" };
-  const url = new URL(participantURL(vdo, colorUsers[0], {}, colorUsers));
+  const url = new URL(participantURL(vdo, colorUsers[0], { schemaVersion: 4, presentation: "native" }, colorUsers));
   assert.equal(url.searchParams.get("meterstyle"), "2");
   const encoded = url.searchParams.get("base64css");
   const restored = decodeURIComponent(atob(encoded));
@@ -235,7 +235,7 @@ test("temas usam cores Foundry e o destaque de fala nativo do VDO", () => {
 
 test("sem tema mantém nomes mas não adiciona estilos nem medidor", () => {
   const config = { ...world, theme: "none", audio: "vdo" };
-  const url = new URL(participantURL(config, users[0], {}, users));
+  const url = new URL(participantURL(config, users[0], { schemaVersion: 4, presentation: "native" }, users));
   assert.equal(url.searchParams.get("showlabels"), "rounded");
   assert.equal(url.searchParams.has("base64css"), false);
   assert.equal(url.searchParams.has("meterstyle"), false);
