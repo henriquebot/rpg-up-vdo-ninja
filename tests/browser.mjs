@@ -717,9 +717,9 @@ try {
   assert.equal(await persistentApply.count(), 1, "Exactly one persistent HUD apply control");
   assert.equal(await persistentApply.isVisible(), true);
   await hudPage.getByRole("button", { name: "Minha câmera", exact: true }).click();
-  await hudPage.getByRole("button", { name: "Janela", exact: true }).click();
+  await hudPage.getByRole("tab", { name: "Janela", exact: true }).click();
   assert.equal(await persistentApply.isVisible(), true, "Apply visible on Janela");
-  await hudPage.getByRole("button", { name: "Avatar", exact: true }).click();
+  await hudPage.getByRole("tab", { name: "Avatar", exact: true }).click();
   assert.equal(await persistentApply.isVisible(), true, "Apply visible on Avatar");
   await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
   assert.equal(await persistentApply.isVisible(), true, "Apply visible on Mesa too");
