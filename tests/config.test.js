@@ -123,7 +123,7 @@ test("OBS gera solo/view do slot certo, com Room/senha e sem publicar nem captur
 test("preferências e geometria são normalizadas sem escapar da viewport", () => {
   assert.equal(normalizePrefs({ dock: "invalid", preview: "network", sideWidth: NaN }).dock, "left");
   assert.equal(normalizePrefs({}).dock, "left");
-  assert.equal(normalizePrefs({}).schemaVersion, 3);
+  assert.equal(normalizePrefs({}).schemaVersion, 4);
   for (const dock of ["left", "right", "top", "bottom", "floating"]) {
     for (const [width, height] of [[1920, 1080], [360, 640], [250, 200]]) {
       const pos = dockPosition({ dock, floating: { width: 2400, height: 1800, left: 9999, top: 9999 } }, { width, height });
