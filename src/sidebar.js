@@ -173,7 +173,23 @@ function install() {
       event.preventDefault();
       event.stopImmediatePropagation();
       activate();
-    } else deactivate();
+    } else if (!panel.hidden) {
+      deactivate();
+      // When the HUD overlays an already-selected native tab (typically
+      // Settings), Foundry's ApplicationV2 may ignore another click on that
+      // same tab. Force the official sidebar controller to re-activate it.
+      // No manual .active/aria-selected mutation, and no fake DOM clicks.
+      const sidebar = ui.sidebar;
+      if (typeof sidebar?.changeTab === "function") {
+        const group = Object.keys(sidebar.tabGroups ?? {}).find(key =>
+          sidebar.tabGroups[key] === tab.dataset.tab) ??
+          (Object.hasOwn(sidebar.tabGroups ?? {}, "sidebar") ? "sidebar" :
+            Object.keys(sidebar.tabGroups ?? {})[0] ?? "sidebar");
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        sidebar.changeTab(tab.dataset.tab, group, { force: true, navElement: tab });
+      }
+    }
   }, true);
   // Native tab clicks deactivate above, while programmatic changes are
   // detected by *comparing* the native selection to its previous value.

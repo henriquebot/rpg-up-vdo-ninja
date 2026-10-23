@@ -34,10 +34,13 @@ test("cabeçalho compacto é carregado com a sala sem apagar indicadores ou cont
 test("adaptativo atinge filhos reais do mosaico e calcula altura no iframe", () => {
   const css = presentationCSS("adaptive");
   assert.match(css, /#gridlayout/);
-  assert.match(css, /#gridlayout>\*/);
+  assert.match(css, /#gridlayout>\.container_holder_video/);
+  assert.match(css, /position:relative!important/);
+  assert.match(css, /top:auto!important/);
+  assert.match(css, /\.container_holder_video>\.holder/);
   assert.match(css, /100dvh/);
   assert.match(css, /100vw/);
-  assert.match(css, /:has\(>:nth-child\(6\)\)/);
+  assert.match(css, /:has\(>\.container_holder_video:nth-child\(6\)\)/);
   assert.match(css, /--rg-count/);
   assert.match(css, /object-fit:contain/);
   assert.doesNotMatch(css, /#controlButtons|#mutebutton|#hangupbutton/);
