@@ -719,8 +719,10 @@ try {
   assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab[data-group]").count(), 0,
     "HUD control MUST NOT join a Foundry tabGroup");
   assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
-    "relative", "HUD overlays without replacing Foundry's native panel");
+    "static", "When the HUD is closed, the native sidebar layout is untouched");
   await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").click();
+  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
+    "relative", "HUD overlays without replacing Foundry's native panel");
   assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.primary), "settings",
     "Clicking the headset must NOT alter Foundry internal tab selection");
   assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), [],
@@ -792,6 +794,8 @@ try {
     "Foundry must still own the active native tab while the HUD is open");
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
+  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
+    "static", "Leaving HUD restores original native sidebar positioning");
   assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
   assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), ["settings"],
     "Foundry owns the Settings click even when it was already selected");
