@@ -24,7 +24,7 @@ jobs:
       - name: Install browser test dependency
         run: npm install --no-save playwright
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
       - name: Run ApplicationV2 browser fixture
         run: npm run test:browser
       - name: Check actual VDO.Ninja camera theme compatibility
