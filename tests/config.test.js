@@ -28,6 +28,26 @@ test("1 GM e 2 jogadores entram na mesma Room com labels e push do Foundry", () 
   }
 });
 
+test("barra superior original do VDO permanece visível para todos os participantes, sem afetar OBS", () => {
+  const modes = [
+    world,
+    { ...world, audio: "vdo" },
+    { ...world, directorUserId: "gm1", roomLayout: "compact" }
+  ];
+  for (const config of modes) for (const user of users) {
+    const source = new URL(participantURL(config, user, {}, users));
+    assert.equal(source.searchParams.has("showheader"), true, "VDO mantém a barra superior");
+    for (const hidden of ["hideheader", "noheader", "hh", "hidemenu", "hm"])
+      assert.equal(source.searchParams.has(hidden), false, hidden);
+    assert.equal(source.searchParams.get("push"), config.slots[user.id]);
+  }
+  const obs = new URL(soloURL(world, users[0].id, users));
+  assert.equal(obs.searchParams.has("showheader"), false, "Link OBS continua limpo");
+  assert.equal(obs.searchParams.has("cleanoutput"), true);
+  const guest = new URL(roomInviteURL(world, users));
+  assert.equal(guest.searchParams.has("showheader"), false, "Convite público conserva interface padrão");
+});
+
 test("reconexões preservam slots e ignoram overrides antigos de câmera/interface/preview", () => {
   const before = structuredClone(world);
   for (const preview of ["native", "mini", "pip"]) {
