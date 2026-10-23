@@ -146,7 +146,6 @@ function install() {
   // Non-invasive overlay: native sidebar content stays rendered, visible to
   // Foundry's own tab controller, and retains all its event handlers. This
   // panel only covers it visually while the HUD is open.
-  content.classList.add("rpgup-hud-overlay-host");
   content.append(panel);
 
   const state = { root, nav, content, trigger, panel, formHost, input, copy, status, refreshToggle };
@@ -162,12 +161,14 @@ function install() {
   const deactivate = () => {
     if (panel.hidden) return;
     panel.hidden = true;
+    content.classList.remove("rpgup-hud-overlay-host");
     trigger.classList.remove("active", "selected");
     trigger.setAttribute("aria-pressed", "false");
     nav.classList.remove("rpgup-hud-nav-active");
   };
   const activate = () => {
     void ui.sidebar?.expand?.();
+    content.classList.add("rpgup-hud-overlay-host");
     panel.hidden = false;
     trigger.classList.add("active");
     trigger.setAttribute("aria-pressed", "true");
