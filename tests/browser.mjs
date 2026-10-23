@@ -713,9 +713,29 @@ try {
   assert.match(await hudPage.locator(".rpgup-invite-copy input").inputValue(), /room=FixtureRoom123/);
   assert.equal(await hudPage.locator(".rpgup-invite-copy button").isEnabled(), true);
   assert.equal(await hudPage.locator(".rpgup-group-button").count(), 3);
+  const persistentApply = hudPage.getByRole("button", { name: "Aplicar alterações e reconectar VDO" });
+  assert.equal(await persistentApply.count(), 1, "Exactly one persistent HUD apply control");
+  assert.equal(await persistentApply.isVisible(), true);
+  await hudPage.getByRole("button", { name: "Minha câmera", exact: true }).click();
+  await hudPage.getByRole("button", { name: "Janela", exact: true }).click();
+  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Janela");
+  await hudPage.getByRole("button", { name: "Avatar", exact: true }).click();
+  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Avatar");
+  await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
+  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Mesa too");
+  // Fresh installs and existing v3 profiles should default to adaptive.
+  // A post-migration explicit Original choice still remains reversible.
+  await hudPage.evaluate(async () => {
+    const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
+    dock.prefs.presentation = "native";
+    await dock._connect({ saveDraft: false });
+  });
+  const nativeURL = await hudPage.locator("iframe").getAttribute("src");
+  assert.equal(new URL(nativeURL).searchParams.has("base64css") &&
+    decodeURIComponent(atob(new URL(nativeURL).searchParams.get("base64css"))).includes("#gridlayout"),
+    false, "Explicit native mode must not include adaptive grid");
   // Presentation CSS must travel in the VDO URL *before* the room starts.
   // Reconnection/reversion must preserve the stream and the original mode.
-  const nativeURL = await hudPage.locator("iframe").getAttribute("src");
   await hudPage.evaluate(async () => {
     const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
     dock.prefs.presentation = "adaptive";
