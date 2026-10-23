@@ -1,5 +1,6 @@
 import { VDO_BASE, QUALITY_PRESETS, parseExtraQuery, validateWorld, normalizePrefs } from "./config.js";
 import { themeCSS, encodeThemeCSS } from "./theme.js";
+import { presentationCSS } from "./presentation.js";
 
 // Nginx commonly rejects request-lines above ~8 KB. Leave room for URL
 // encoding, proxies, and future VDO parameters: NEVER navigate a longer URL.
@@ -54,10 +55,13 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
   // Label is already the Foundry username; showlabels makes it visible on each tile.
   url.searchParams.set("showlabels", "rounded");
   const isDirector = config.directorUserId === user.id && user.isGM;
-  // The optional display experiment is injected after iframe load. Embedding
-  // several KB of grid CSS here could overflow the safe 6900-char VDO URL.
+  // Load the optional styling with the document, before a guest joins the
+  // room. postMessage after iframe.onload was too late/unreliable in actual
+  // sessions. Keep styling local to this user's link; never alter OBS exports.
+  const extraPresentation = presentationCSS(prefs.presentation, { director: isDirector });
   const css = themeCSS(config, users);
-  if (css) url.searchParams.set("base64css", encodeThemeCSS(css));
+  const assembledCSS = [css, extraPresentation].filter(Boolean).join("");
+  if (assembledCSS) url.searchParams.set("base64css", encodeThemeCSS(assembledCSS));
   if (config.theme !== "none" && config.audio === "vdo") {
     // Official native speaker outline: meterstyle=4 only sets a data attribute
     // and was invisible in real calls. 2 draws the VDO audio activity border.
@@ -87,25 +91,34 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
     url.searchParams.set("audiodevice", "0");
     url.searchParams.set("noaudio", "");
   }
-  // Keep at least 2.5 KB available for the avatar before encoding it.
-  // If a very large world has too much per-player CSS, connectivity wins.
+  // Keep at least 2.5 KB available for the avatar. With many users,
+  // prioritize the selected layout over per-user border colors, then fall
+  // back to only the minimalist header if the safe request-line budget shrinks.
   if (url.searchParams.has("base64css")) {
-    const withoutAvatar = new URL(url);
-    withoutAvatar.searchParams.delete("avatar");
-    if (withoutAvatar.href.length > MAX_VDO_URL_LENGTH - 2500) {
-      url.searchParams.delete("base64css");
+    const urlWithoutAvatar = () => {
+      const baseline = new URL(url);
+      baseline.searchParams.delete("avatar");
+      return baseline.href.length;
+    };
+    if (urlWithoutAvatar() > MAX_VDO_URL_LENGTH - 2500) {
+      if (extraPresentation) url.searchParams.set("base64css", encodeThemeCSS(extraPresentation));
+      else url.searchParams.delete("base64css");
       url.searchParams.delete("meterstyle");
     }
+    if (extraPresentation && urlWithoutAvatar() > MAX_VDO_URL_LENGTH - 2500) {
+      url.searchParams.set("base64css", encodeThemeCSS(presentationCSS("minimal")));
+    }
+    if (urlWithoutAvatar() > MAX_VDO_URL_LENGTH - 2500) url.searchParams.delete("base64css");
   }
-  // Last-resort protection for legacy/external links with unbounded avatars.
-  // The dock and export normally resize images *before* invoking this method.
-  if (url.href.length > MAX_VDO_URL_LENGTH) {
-    url.searchParams.delete("base64css");
-    url.searchParams.delete("meterstyle");
-  }
+  // Avatar gets resized before this step in the dock, but direct callers
+  // may supply oversized images. Prefer preserving optional presentation.
   if (url.href.length > MAX_VDO_URL_LENGTH) {
     url.searchParams.delete("avatar");
     url.searchParams.set("avatar", "default");
+  }
+  if (url.href.length > MAX_VDO_URL_LENGTH) {
+    url.searchParams.delete("base64css");
+    url.searchParams.delete("meterstyle");
   }
   if (url.href.length > MAX_VDO_URL_LENGTH) {
     throw new Error("URL de entrada VDO excede o limite seguro; reduza parâmetros avançados.");
