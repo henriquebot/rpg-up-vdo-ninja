@@ -38,8 +38,8 @@ export function createPersonalTabs() {
   const connectionStatus = element("p", "", { class: "rpgup-status", role: "status" });
   const reportReconnect = message => {
     connectionStatus.textContent = message;
-    const hud = document.querySelector(".rpgup-sidebar-pane:not([hidden]) .rpgup-hud-apply-status");
-    if (hud) hud.textContent = message;
+    const global = document.querySelector("#rpgup-vdo-world-config .rpgup-global-reconnect-status");
+    if (global) global.textContent = message;
   };
   const reconnect = tooltip(button("Aplicar / reconectar", "fa-check", { class: "rpgup-primary" }),
     "Aplica a sala e o avatar atuais, reiniciando a conexão VDO e sua câmera.");

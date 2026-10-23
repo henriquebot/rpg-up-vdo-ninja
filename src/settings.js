@@ -33,13 +33,13 @@ export function registerSettings(RoomDock, WorldConfig, onChange) {
     type: Object, default: structuredClone(DEFAULT_WORLD), onChange
   });
   game.settings.registerMenu(MODULE_ID, "worldConfig", {
-    name: "RPGUP VDO.Ninja — HUD", label: "Abrir HUD de câmeras",
-    hint: "Use a aba HUD ao lado de Cenas, Atores e Configurações para acessar todos os controles. Esta janela é um acesso alternativo para o mestre.",
-    icon: "fas fa-video", type: WorldConfig, restricted: true
+    name: "RPGUP VDO.Ninja — Configurações", label: "Abrir configurações",
+    hint: "Configurações da sala para o mestre e preferências pessoais para cada jogador. Também acessível pelo botão VDO na barra de ferramentas à esquerda (Tokens).",
+    icon: "fas fa-video", type: WorldConfig, restricted: false
   });
   game.settings.registerMenu(MODULE_ID, "openDock", {
     name: "RPGUP VDO.Ninja — Câmeras", label: "Abrir dock de câmeras",
-    hint: "Use o botão Opções VDO.Ninja na aba Configurações do Foundry; Câmeras VDO.Ninja alterna abrir/fechar a dock. Câmera e PiP usam os controles do VDO.",
+    hint: "Abre ou fecha a área das câmeras; configurações ficam no menu acima ou no botão VDO da barra de ferramentas à esquerda.",
     icon: "fas fa-video", type: RoomDock, restricted: false
   });
 }

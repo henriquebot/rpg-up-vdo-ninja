@@ -123,6 +123,7 @@ Hooks.callAll("ready");
 globalThis.fixture = {
   config: () => structuredClone(config),
   menu: key => new (menus.get(key).type)().render({ force: true }),
+  menuSpec: key => menus.get(key),
   async closeConfig() { for (const app of applications) if (app.rendered && app.options.id === "rpgup-vdo-world-config") await app.close(); },
   async dock() { return (await import("/src/room-dock.js")).RoomDock.instance; },
   async setConfig(value) { return game.settings.set("rpgup-vdo-ninja", "world", value); }
