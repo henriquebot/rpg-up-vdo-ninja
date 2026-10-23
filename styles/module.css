@@ -435,3 +435,22 @@ body.rpgup-vdo-docked #interface {
 @media (prefers-reduced-motion: reduce) {
   .rpgup-sidebar-pane *, .rpgup-sidebar-pane *::before, .rpgup-sidebar-pane *::after { transition: none !important; animation: none !important; }
 }
+
+/* Native Foundry module settings: persistent reconnect control in every tab. */
+.rpgup-world-config .rpgup-global-reconnect {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 11px;
+  background: var(--rpgup-surface);
+  border: 1px solid var(--rpgup-line);
+  border-radius: 9px;
+}
+.rpgup-world-config .rpgup-global-reconnect .rpgup-primary { min-height: 32px; }
+.rpgup-world-config .rpgup-global-reconnect-status { margin: 0; font-size: 11px; color: var(--rpgup-muted); }
+.rpgup-world-config .rpgup-global-reconnect-status:empty { display: none; }
+
