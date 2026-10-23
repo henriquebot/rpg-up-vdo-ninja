@@ -139,24 +139,27 @@ function install() {
   void mountForm(state).catch(report);
   refreshToggle();
 
+  // Foundry v13/v14 owns native tab selection in ApplicationV2.tabGroups.
+  // Never mutate a native tab's .active / aria-selected ourselves: doing so
+  // leaves the DOM out of sync with that controller. In particular, clicking
+  // the already-selected Settings tab becomes a no-op until Chat is visited.
+  const selectedNativeTab = () => Array.from(nav.querySelectorAll("[data-tab]")).find(tab =>
+    tab !== trigger && (tab.classList.contains("active") || tab.getAttribute("aria-selected") === "true")) ?? null;
   const deactivate = () => {
     if (panel.hidden) return;
     content.classList.remove("rpgup-hud-active");
+    nav.classList.remove("rpgup-hud-nav-active");
     panel.hidden = true;
     trigger.classList.remove("active", "selected");
     trigger.setAttribute("aria-selected", "false");
   };
   const activate = () => {
-    // Remember the real Foundry sidebar state. Native tabs remain in the
-    // sidebar and work normally when clicked again.
+    // We are a visual overlay of the native content pane; the underlying
+    // selected Foundry tab remains selected and fully functional.
+    state.nativeSelection = selectedNativeTab();
     void ui.sidebar?.expand?.();
-    for (const tab of nav.querySelectorAll("[data-tab]")) {
-      if (tab !== trigger) {
-        tab.classList.remove("active", "selected");
-        tab.setAttribute("aria-selected", "false");
-      }
-    }
     content.classList.add("rpgup-hud-active");
+    nav.classList.add("rpgup-hud-nav-active");
     panel.hidden = false;
     trigger.classList.add("active");
     trigger.setAttribute("aria-selected", "true");
@@ -172,13 +175,12 @@ function install() {
       activate();
     } else deactivate();
   }, true);
-  // Deactivate also when core or another module changes tabs programmatically.
-  // This is intentionally scoped to the nav instead of observing the whole UI.
+  // Native tab clicks deactivate above, while programmatic changes are
+  // detected by *comparing* the native selection to its previous value.
+  // The previously selected native tab intentionally stays active in the DOM.
   const observer = new MutationObserver(() => {
     if (panel.hidden) return;
-    const selectedElsewhere = Array.from(nav.querySelectorAll("[data-tab]")).some(tab =>
-      tab !== trigger && (tab.classList.contains("active") || tab.getAttribute("aria-selected") === "true"));
-    if (selectedElsewhere || !trigger.classList.contains("active")) deactivate();
+    if (selectedNativeTab() !== state.nativeSelection || !trigger.classList.contains("active")) deactivate();
   });
   observer.observe(nav, { attributes: true, subtree: true, attributeFilter: ["class", "aria-selected"] });
   state.activate = activate;
