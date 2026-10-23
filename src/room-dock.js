@@ -4,6 +4,7 @@ import { prepareAvatar } from "./avatar.js";
 import { worldConfig, userPrefs, savePrefs } from "./settings.js";
 import { element, tooltip, report } from "./dom.js";
 import { WorldConfig } from "./world-config.js";
+import { presentationCSS } from "./presentation.js";
 
 const ApplicationV2 = foundry.applications.api.ApplicationV2;
 
@@ -157,6 +158,7 @@ export class RoomDock extends ApplicationV2 {
         });
         this._iframe.addEventListener("load", () => {
           if (this._pending) return;
+          this._applyExperimentalPresentation();
           this._status.textContent = "Documento do iframe carregado. Câmera e conexão: confira na UI VDO.Ninja. PiP: clique na UI nativa ou Ctrl+Alt+P com foco no iframe.";
         }, { signal: this._listeners.signal });
         this._frameHost.replaceChildren(this._iframe);
@@ -185,6 +187,16 @@ export class RoomDock extends ApplicationV2 {
         this._reloadButton.disabled = false;
       }
     }
+  }
+
+  _applyExperimentalPresentation() {
+    if (!this._iframe?.contentWindow || !this._activeURL) return;
+    const director = new URL(this._activeURL).searchParams.has("director");
+    const css = presentationCSS(this.prefs.presentation, { director });
+    if (!css) return; // "Original" is a real no-op: no manipulation of VDO.
+    // Official iframe API; never inspect cross-origin DOM or alter streams.
+    // Target a specific trusted origin, not '*'.
+    this._iframe.contentWindow.postMessage({ style: css }, new URL(this._activeURL).origin);
   }
 
   configChanged() {
