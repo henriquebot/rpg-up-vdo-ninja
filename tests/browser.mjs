@@ -639,7 +639,9 @@ try {
   // controls hosted in the same column as native Chat/Scenes/Actors tabs.
   const hudContext = await browser.newContext({ viewport: { width: 1280, height: 840 } });
   await hudContext.route("https://vdo.ninja/**", route =>
-    route.fulfill({ contentType: "text/html", body: "<p>VDO fixture</p>" }));
+    route.fulfill({ contentType: "text/html", body:
+      '<p>VDO fixture</p><script>addEventListener("message",e=>{if(e.data?.style)parent.postMessage({betaVdoCSS:e.data.style},"*")})</script>'
+    }));
   const hudPage = await hudContext.newPage();
   const hudErrors = [];
   hudPage.on("pageerror", error => hudErrors.push(error.message));
@@ -705,6 +707,31 @@ try {
   assert.match(await hudPage.locator(".rpgup-invite-copy input").inputValue(), /room=FixtureRoom123/);
   assert.equal(await hudPage.locator(".rpgup-invite-copy button").isEnabled(), true);
   assert.equal(await hudPage.locator(".rpgup-group-button").count(), 3);
+  // Per-player rollback smoke: real browser cross-origin iframe receives
+  // CSS over postMessage only after an opted-in reload. Returning to native
+  // sends nothing, and never changes the VDO media URL.
+  await hudPage.evaluate(() => {
+    globalThis.betaStyleMessages = [];
+    window.addEventListener("message", event => {
+      if (event.origin === "https://vdo.ninja" && event.data?.betaVdoCSS)
+        betaStyleMessages.push(event.data.betaVdoCSS);
+    });
+    const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
+    globalThis.beforePresentationURL = dock._activeURL;
+    dock.prefs.presentation = "adaptive";
+    dock._reloadRoom();
+  });
+  await hudPage.waitForFunction(() => globalThis.betaStyleMessages?.length >= 1);
+  assert.match(await hudPage.evaluate(() => betaStyleMessages[0]), /#gridlayout/);
+  await hudPage.evaluate(() => {
+    const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
+    dock.prefs.presentation = "native";
+    dock._reloadRoom();
+  });
+  await hudPage.locator("iframe").contentFrame().locator("p").waitFor();
+  assert.equal(await hudPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.dock()._activeURL),
+    await hudPage.evaluate(() => globalThis.beforePresentationURL), "Rollback does not replace media URL");
+  assert.equal(await hudPage.evaluate(() => betaStyleMessages.length), 1, "Native mode never injects custom CSS");
   await hudPage.getByRole("button", { name: "Avançado", exact: true }).click();
   assert.equal(await hudPage.locator("#rpgup-world-tab-audioFilters").isVisible(), true);
   await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
