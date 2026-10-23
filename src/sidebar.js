@@ -179,7 +179,7 @@ function install() {
     // This ordinary button does not match the native [data-tab] selector.
     // Avoid canceling the event: Foundry's own sidebar click handling can
     // safely ignore it instead of desynchronizing its internal tab state.
-    activate();
+    activateHUD();
   });
   nav.addEventListener("click", event => {
     const native = event.target.closest?.("[data-tab]");
