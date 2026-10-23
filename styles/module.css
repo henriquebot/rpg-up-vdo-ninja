@@ -327,7 +327,7 @@ body.rpgup-vdo-docked #interface {
 .rpgup-invite-copy input { flex: 1 1 auto; width: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
 .rpgup-invite-copy button { flex: 0 0 auto; font-size: 11px; font-weight: 650; min-height: 34px; }
 .rpgup-invite-note { color: var(--rpgup-muted); font-size: 10.5px; line-height: 1.4; margin: 0; }
-.rpgup-hud-actions { flex: 0 0 auto; padding: 0 12px 12px; display: flex; }
+.rpgup-hud-actions { flex: 0 0 auto; padding: 0 12px 12px; display: flex; flex-direction: column; gap: 7px; }
 .rpgup-hud-actions button { width: 100%; min-height: 35px; font-weight: 600; }
 .rpgup-hud-actions button[aria-pressed="true"] { border-color: var(--rpgup-accent); }
 .rpgup-hud-options { flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; padding: 0 12px 15px; }
