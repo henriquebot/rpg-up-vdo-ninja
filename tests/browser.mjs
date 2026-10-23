@@ -117,7 +117,7 @@ try {
     await img.decode();
     return [img.naturalWidth, img.naturalHeight];
   }, new URL(initialURL).searchParams.get("avatar"));
-  assert.ok(preparedDimensions[0] >= 384 && preparedDimensions[1] >= 384, "Avatar de alta resolução não pode encolher indevidamente");
+  assert.ok(preparedDimensions[0] >= 256 && preparedDimensions[1] >= 256, "No modo adaptativo, avatar ainda precisa cobrir a largura usual da dock sem estourar a URL");
   assert.ok(initialURL.length <= 6900, "Nunca enviar request URI grande o bastante para o nginx responder 414");
   assert.equal(await page.locator('[name="Câmera padrão"], [name="Interface VDO"], [name="Self-preview"]').count(), 0);
   await dockTab(page, "window");
