@@ -72,8 +72,12 @@ try {
   assert.equal(await page.locator(".window-header [data-action=reloadRoom]").count(), 1);
   assert.equal(await page.locator("#rpgup-vdo-room > .window-header").isVisible(), false, "Dock não mostra barra de título");
   assert.equal(await page.locator(".rpgup-vdo-quick-controls").count(), 0, "Não inserir engrenagem no canvas");
-  assert.equal(await page.getByRole("button", { name: "Opções VDO.Ninja", exact: true }).count(), 1, "Segundo botão na aba Configurações");
-  assert.equal(await page.locator(".rpgup-open-dock").getAttribute("aria-pressed"), "true", "Dock inicia aberta");
+  assert.equal(await page.getByRole("button", { name: "Opções VDO.Ninja", exact: true }).count(), 0,
+    "Do not inject extra buttons into the right-hand Settings tab");
+  assert.equal(await page.locator(".rpgup-hud-tab, .rpgup-sidebar-pane").count(), 0,
+    "No custom sidebar tabs or panels");
+  assert.equal(await page.evaluate(() => fixture.menuSpec("worldConfig").restricted), false,
+    "GM and players must have the native module settings menu");
   const closedHost = await page.locator(".rpgup-frame-host").boundingBox();
   assert.ok(closedHost.height >= 560, "Controles escondidos deixam a sala ocupar toda a janela");
   const initialLoads = navigations;
@@ -543,35 +547,26 @@ try {
   await autoPage.waitForFunction(() => document.querySelector("iframe"));
   console.log("Abrir ao entrar: desmarcar impede abertura no próximo login; menu reabre manualmente: OK.");
 
+  // Native Foundry module menus replace all injected right-sidebar buttons.
   await autoPage.evaluate(async () => {
     await (await fixture.dock()).close();
-    Hooks.callAll("renderSettings", {}, document.querySelector("#settings"));
+    await game.modules.get("rpgup-vdo-ninja").api.toggleDock();
   });
-  const cameras = autoPage.getByRole("button", { name: "Câmeras VDO.Ninja", exact: true });
-  const options = autoPage.getByRole("button", { name: "Opções VDO.Ninja", exact: true });
-  assert.equal(await cameras.count(), 1);
-  assert.equal(await options.count(), 1);
-  await cameras.click();
   await autoPage.waitForFunction(() => document.querySelector("iframe"));
-  assert.equal(await cameras.getAttribute("aria-pressed"), "true");
-  await cameras.click();
+  await autoPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleDock());
   await autoPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-room"));
-  assert.equal(await autoPage.locator("iframe").count(), 0, "Fechar dock fecha o iframe VDO");
-  assert.equal(await cameras.getAttribute("aria-pressed"), "false");
-  await options.click();
-  await autoPage.waitForFunction(() => document.querySelector("#rpgup-vdo-world-config"));
-  assert.equal(await autoPage.locator("iframe").count(), 0, "Abrir opções não cria dock nem conexão VDO");
-  await options.click();
+  assert.equal(await autoPage.locator("iframe").count(), 0);
+  await autoPage.evaluate(() => fixture.menu("worldConfig"));
+  assert.equal(await autoPage.locator("#rpgup-vdo-world-config").isVisible(), true,
+    "Native Foundry module settings menu opens the complete configuration window");
+  assert.equal(await autoPage.locator("iframe").count(), 0,
+    "Opening module settings does not start a camera connection");
+  await autoPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   await autoPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-world-config"));
-  assert.equal(await autoPage.locator("iframe").count(), 0, "Segundo clique fecha apenas opções");
-  await cameras.click();
-  await autoPage.waitForFunction(() => document.querySelector("iframe"));
-  await cameras.click();
-  await autoPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-room"));
-  await cameras.click();
+  await autoPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleDock());
   await autoPage.waitForFunction(() => document.querySelector("iframe"));
   assert.equal(await autoPage.locator("iframe").count(), 1);
-  console.log("Botão Câmeras alterna abrir/fechar; segundo botão abre opções; iframe único: OK.");
+  console.log("Native settings menu and camera toggle: OK.");
 
   // Closing during image preparation must cancel the old connection, while an
   // immediate reopen can start its own image fetch and create exactly one frame.
@@ -635,196 +630,54 @@ try {
   assert.equal(await page.locator("body").evaluate(node => node.style.getPropertyValue("--rpgup-vdo-left")), "");
   console.log("Janela única, separação GM/jogador, posição, zoom, avatar, iframe e resize: OK.");
 
-  // Sidebar navigation simulation: no floating configuration window, full
-  // controls hosted in the same column as native Chat/Scenes/Actors tabs.
-  const hudContext = await browser.newContext({ viewport: { width: 1280, height: 840 } });
-  await hudContext.route("https://vdo.ninja/**", route =>
+  // Confirm the official Scene Controls registration (Foundry v13/v14).
+  // No right sidebar manipulation or fake data-tab is permitted.
+  const controlsContext = await browser.newContext({ viewport: { width: 1280, height: 840 } });
+  await controlsContext.route("https://vdo.ninja/**", route =>
     route.fulfill({ contentType: "text/html", body: "<p>VDO fixture</p>" }));
-  const hudPage = await hudContext.newPage();
-  const hudErrors = [];
-  hudPage.on("pageerror", error => hudErrors.push(error.message));
-  await hudPage.goto(base + "/tests/harness.html");
-  await hudPage.waitForFunction(() => globalThis.fixtureReady);
-  await hudPage.evaluate(() => {
-    const sidebar = document.createElement("section");
-    sidebar.id = "sidebar";
-    sidebar.style.cssText = "position:absolute;right:0;top:0;width:340px;height:800px;display:flex;flex-direction:column;background:#24262d;";
-    const tabs = document.createElement("nav");
-    tabs.id = "sidebar-tabs";
-    // Foundry v14's nav has an internal tab rail alongside other controls.
-    // Appending to the outer nav would create a second (floating) column.
-    tabs.style.cssText = "display:flex;flex-direction:row;align-items:flex-start;width:100px;gap:10px;";
-    const nativeRail = document.createElement("div");
-    nativeRail.className = "sidebar-tabs-rail";
-    nativeRail.style.cssText = "display:flex;flex-direction:column;flex:0 0 42px;gap:4px;";
-    nativeRail.innerHTML = '<button class="sidebar-tab" style="height:36px;width:42px" type="button" data-tab="chat" aria-selected="false">Chat</button><button class="sidebar-tab active" style="height:36px;width:42px" type="button" data-tab="settings" aria-selected="true">Configurações</button>';
-    const auxiliary = document.createElement("div");
-    auxiliary.className = "sidebar-tabs-auxiliary";
-    auxiliary.textContent = "Outros controles";
-    tabs.append(nativeRail, auxiliary);
-    const content = document.createElement("div");
-    content.id = "sidebar-content";
-    content.style.cssText = "flex:1;min-height:0;";
-    content.innerHTML = '<section class="native-settings">Painel original <button type="button" id="native-options-test">Abrir opções nativas</button></section>';
-    sidebar.append(tabs, content);
-    document.body.append(sidebar);
-    globalThis.nativeOptionsClicks = 0;
-    content.querySelector("#native-options-test").addEventListener("click", () => globalThis.nativeOptionsClicks++);
-    // Emulate Foundry ApplicationV2 tabGroups: clicking a tab that is already
-    // selected is a no-op. Manually removing .active while the controller still
-    // records "settings" reproduces the original bug in real Foundry.
-    globalThis.nativeForcedSwitches = [];
-    globalThis.nativeEarlyTabClicks = [];
-    ui.sidebar = {
-      element: sidebar, tabGroups: { primary: "settings" },
-      expand() { return Promise.resolve(); },
-      changeTab(tabName, group, { force = false } = {}) {
-        if (force) nativeForcedSwitches.push({ tabName, group });
-        if (this.tabGroups[group] === tabName && !force) return;
-        this.tabGroups[group] = tabName;
-        for (const tab of nativeRail.querySelectorAll("[data-tab]")) {
-          const active = tab.dataset.tab === tabName;
-          tab.classList.toggle("active", active);
-          tab.setAttribute("aria-selected", String(active));
-        }
-        content.querySelector(".native-settings").hidden = tabName !== "settings";
-      }
+  const controlsPage = await controlsContext.newPage();
+  const controlsErrors = [];
+  controlsPage.on("pageerror", error => controlsErrors.push(error.message));
+  await controlsPage.goto(base + "/tests/harness.html");
+  await controlsPage.waitForFunction(() => globalThis.fixtureReady);
+  const toolMetadata = await controlsPage.evaluate(() => {
+    globalThis.sceneControlSpec = {
+      tokens: { tools: { select: { name: "select", order: 1 } } },
+      drawings: { tools: {} }
     };
-    // Important: Foundry's real handler may run in capture phase on the
-    // sidebar application, BEFORE our nav listener. Unlike the old fixture,
-    // this catches fake [data-tab] buttons even when the module later calls
-    // stopImmediatePropagation. We must not register a fake native tab at all.
-    sidebar.addEventListener("click", event => {
-      const foundryTab = event.target.closest?.("[data-tab]");
-      if (!foundryTab || !tabs.contains(foundryTab)) return;
-      nativeEarlyTabClicks.push(foundryTab.dataset.tab);
-      ui.sidebar.changeTab(foundryTab.dataset.tab, "primary");
-    }, true);
-    Hooks.callAll("renderSidebar", ui.sidebar, sidebar);
+    Hooks.callAll("getSceneControlButtons", sceneControlSpec);
+    return {
+      vdo: sceneControlSpec.tokens.tools["rpgup-vdo-options"],
+      toolCount: Object.keys(sceneControlSpec.tokens.tools).length,
+      drawingsUnchanged: Object.keys(sceneControlSpec.drawings.tools).length
+    };
   });
-  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1);
-  assert.equal(await hudPage.locator("#sidebar-tabs .sidebar-tabs-rail > .rpgup-hud-tab").count(), 1,
-    "O HUD deve ser irmão das abas nativas dentro da coluna de ícones");
-  const nativeBounds = await hudPage.locator('#sidebar-tabs [data-tab="settings"]').boundingBox();
-  const hudBounds = await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").boundingBox();
-  assert.ok(Math.abs(nativeBounds.x - hudBounds.x) <= 1,
-    "O HUD precisa ficar na mesma coordenada horizontal de Configurações, não flutuar sobre o mapa");
-  assert.ok(Math.abs(nativeBounds.width - hudBounds.width) <= 1,
-    "O HUD deve herdar a largura do botão nativo");
-  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab > i.fa-headset").count(), 1,
-    "Ícone de headset discreto e consistente com os demais");
-  assert.equal(await hudPage.locator("#sidebar-content .rpgup-sidebar-pane").count(), 1);
-  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab[data-tab]").count(), 0,
-    "HUD control MUST NOT register as a native Foundry data-tab");
-  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab[data-group]").count(), 0,
-    "HUD control MUST NOT join a Foundry tabGroup");
-  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
-    "static", "When the HUD is closed, the native sidebar layout is untouched");
-  await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").click();
-  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
-    "relative", "HUD overlays without replacing Foundry's native panel");
-  assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.primary), "settings",
-    "Clicking the headset must NOT alter Foundry internal tab selection");
-  assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), [],
-    "Foundry's EARLY capture listener must never see the headset as a tab");
-  assert.equal(await hudPage.locator(".native-settings").evaluate(el => getComputedStyle(el).display), "block",
-    "Foundry native Settings panel must remain rendered while overlay is showing");
-  await hudPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
-  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
-  assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "HUD não cria janela separada");
-  assert.match(await hudPage.locator(".rpgup-invite-copy input").inputValue(), /room=FixtureRoom123/);
-  assert.equal(await hudPage.locator(".rpgup-invite-copy button").isEnabled(), true);
-  assert.equal(await hudPage.locator(".rpgup-group-button").count(), 3);
-  const persistentApply = hudPage.getByRole("button", { name: "Aplicar alterações e reconectar VDO" });
-  assert.equal(await persistentApply.count(), 1, "Exactly one persistent HUD apply control");
-  assert.equal(await persistentApply.isVisible(), true);
-  await hudPage.getByRole("button", { name: "Minha câmera", exact: true }).click();
-  await hudPage.getByRole("tab", { name: "Janela", exact: true }).click();
-  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Janela");
-  await hudPage.getByRole("tab", { name: "Avatar", exact: true }).click();
-  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Avatar");
-  await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
-  assert.equal(await persistentApply.isVisible(), true, "Apply visible on Mesa too");
-  // Fresh installs and existing v3 profiles should default to adaptive.
-  // A post-migration explicit Original choice still remains reversible.
-  await hudPage.evaluate(async () => {
-    const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
-    dock.prefs.presentation = "native";
-    await dock._connect({ saveDraft: false });
-  });
-  const nativeURL = await hudPage.locator("iframe").getAttribute("src");
-  assert.equal(new URL(nativeURL).searchParams.has("base64css") &&
-    decodeURIComponent(atob(new URL(nativeURL).searchParams.get("base64css"))).includes("#gridlayout"),
-    false, "Explicit native mode must not include adaptive grid");
-  // Presentation CSS must travel in the VDO URL *before* the room starts.
-  // Reconnection/reversion must preserve the stream and the original mode.
-  await hudPage.evaluate(async () => {
-    const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
-    dock.prefs.presentation = "adaptive";
-    await dock._connect({ saveDraft: false });
-  });
-  const adjusted = await hudPage.locator("iframe").getAttribute("src");
-  const adaptiveCSS = decodeURIComponent(atob(new URL(adjusted).searchParams.get("base64css")));
-  assert.match(adaptiveCSS, /#gridlayout/, "CSS must be in the URL, not injected after the VDO loads");
-  assert.match(adaptiveCSS, /#logoname/, "Cabeçalho mínimo faz parte do modo adaptativo");
-  assert.equal(new URL(adjusted).searchParams.get("push"), new URL(nativeURL).searchParams.get("push"));
-  await hudPage.evaluate(async () => {
-    const dock = game.modules.get("rpgup-vdo-ninja").api.dock();
-    dock.prefs.presentation = "native";
-    await dock._connect({ saveDraft: false });
-  });
-  const reverted = await hudPage.locator("iframe").getAttribute("src");
-  const revertedCSS = decodeURIComponent(atob(new URL(reverted).searchParams.get("base64css")));
-  assert.doesNotMatch(revertedCSS, /#gridlayout|#logoname/, "Native mode fully reverts optional styling");
-  assert.equal(new URL(reverted).searchParams.get("push"), new URL(nativeURL).searchParams.get("push"));
-  await hudPage.getByRole("button", { name: "Avançado", exact: true }).click();
-  assert.equal(await hudPage.locator("#rpgup-world-tab-audioFilters").isVisible(), true);
-  await hudPage.getByRole("button", { name: "Mesa", exact: true }).click();
-  assert.equal(await hudPage.locator("#rpgup-world-tab-general").isVisible(), true);
-  await hudPage.locator('.rpgup-sidebar-pane input[name="roomId"]').fill("HudTestRoom001");
-  await hudPage.locator(".rpgup-sidebar-pane .rpgup-config-footer button[type=submit]").click();
-  await hudPage.waitForFunction(() =>
-    document.querySelector(".rpgup-invite-copy input")?.value.includes("HudTestRoom001"));
-  assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "Salvar não reabre janela antiga");
-  assert.equal(await hudPage.locator('.rpgup-sidebar-pane input[name="roomId"]').inputValue(), "HudTestRoom001");
-  // Regression: HUD overlays Settings without corrupting native selection.
-  // The *first* click on Settings must restore its real options; it must not
-  // require visiting Chat/Actors and returning to make buttons respond.
-  assert.equal(await hudPage.locator('#sidebar-tabs [data-tab="settings"]').getAttribute("aria-selected"), "true",
-    "Foundry must still own the active native tab while the HUD is open");
-  await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
-  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
-  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
-    "static", "Leaving HUD restores original native sidebar positioning");
-  assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
-  assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), ["settings"],
-    "Foundry owns the Settings click even when it was already selected");
-  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches), [],
-    "No forced tab changes or DOM intervention are needed with an isolated overlay");
-  await hudPage.locator("#native-options-test").click();
-  assert.equal(await hudPage.evaluate(() => globalThis.nativeOptionsClicks), 1,
-    "Opções nativas devem funcionar ao primeiro clique após sair do HUD");
-  await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").click();
-  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
-  await hudPage.locator("#sidebar-tabs [data-tab=chat]").click();
-  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
-  assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.primary), "chat",
-    "Native sidebar's original event handler must receive and complete the Chat click");
-  assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), ["settings", "chat"],
-    "Both original native buttons handle their own clicks in capture phase");
-  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches), [],
-    "HUD does not touch native tab activation even when switching to Chat");
-  await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
-  assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
-  await hudPage.locator("#native-options-test").click();
-  assert.equal(await hudPage.evaluate(() => globalThis.nativeOptionsClicks), 2,
-    "Navegação Chat → Configurações preserva os controles nativos");
-  await hudPage.evaluate(() => Hooks.callAll("renderSidebar", ui.sidebar, ui.sidebar.element));
-  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1, "Renderizar a barra não duplica o HUD");
-  await hudPage.screenshot({ path: path.join(screenshotDirectory, "premium-sidebar-hud.png") });
-  assert.deepEqual(hudErrors, []);
-  await hudContext.close();
-  console.log("HUD nativo: convite, cópia visível, categorias, salvar e retorno à sidebar: OK.");
+  assert.equal(toolMetadata.vdo.name, "rpgup-vdo-options");
+  assert.equal(toolMetadata.vdo.button, true);
+  assert.equal(toolMetadata.vdo.visible, true);
+  assert.equal(toolMetadata.toolCount, 2);
+  assert.equal(toolMetadata.drawingsUnchanged, 0);
+  assert.equal(await controlsPage.locator(".rpgup-hud-tab, .rpgup-sidebar-pane").count(), 0,
+    "Never attach an unauthorized tab or pane to Foundry's right sidebar");
+
+  // The left scene control opens only the native ApplicationV2 settings window,
+  // with the original buttons responding on the very first click.
+  await controlsPage.evaluate(() =>
+    sceneControlSpec.tokens.tools["rpgup-vdo-options"].onChange());
+  await controlsPage.locator("#rpgup-vdo-world-config").waitFor({ state: "visible" });
+  assert.equal(await controlsPage.locator("iframe").count(), 1, "Opening settings must not duplicate VDO iframe");
+  await controlsPage.getByRole("button", { name: "Minha câmera", exact: true }).click();
+  await controlsPage.getByRole("tab", { name: "Janela", exact: true }).click();
+  assert.equal(await controlsPage.getByRole("combobox", { name: "Exibição das câmeras" }).isVisible(), true,
+    "Personal camera settings work without switching right-sidebar tabs");
+  await controlsPage.getByRole("button", { name: "Mesa", exact: true }).click();
+  await controlsPage.getByRole("tab", { name: "Sala", exact: true }).click();
+  assert.equal(await controlsPage.locator('input[name="roomId"]').isVisible(), true);
+  await controlsPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
+  await controlsPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-world-config"));
+  assert.deepEqual(controlsErrors, []);
+  await controlsContext.close();
+  console.log("Official left Scene Control and native settings window: OK.");
 
 } finally {
   await browser?.close();
