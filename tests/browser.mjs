@@ -674,14 +674,15 @@ try {
     // selected is a no-op. Manually removing .active while the controller still
     // records "settings" reproduces the original bug in real Foundry.
     globalThis.nativeForcedSwitches = [];
+    globalThis.nativeEarlyTabClicks = [];
     ui.sidebar = {
-      element: sidebar, tabGroups: { sidebar: "settings" },
+      element: sidebar, tabGroups: { primary: "settings" },
       expand() { return Promise.resolve(); },
       changeTab(tabName, group, { force = false } = {}) {
         if (force) nativeForcedSwitches.push({ tabName, group });
         if (this.tabGroups[group] === tabName && !force) return;
         this.tabGroups[group] = tabName;
-        for (const tab of nativeRail.querySelectorAll("[data-tab]:not(.rpgup-hud-tab)")) {
+        for (const tab of nativeRail.querySelectorAll("[data-tab]")) {
           const active = tab.dataset.tab === tabName;
           tab.classList.toggle("active", active);
           tab.setAttribute("aria-selected", String(active));
@@ -689,10 +690,16 @@ try {
         content.querySelector(".native-settings").hidden = tabName !== "settings";
       }
     };
-    tabs.addEventListener("click", event => {
-      const native = event.target.closest(".sidebar-tabs-rail > [data-tab]:not(.rpgup-hud-tab)");
-      if (native) ui.sidebar.changeTab(native.dataset.tab, "sidebar");
-    });
+    // Important: Foundry's real handler may run in capture phase on the
+    // sidebar application, BEFORE our nav listener. Unlike the old fixture,
+    // this catches fake [data-tab] buttons even when the module later calls
+    // stopImmediatePropagation. We must not register a fake native tab at all.
+    sidebar.addEventListener("click", event => {
+      const foundryTab = event.target.closest?.("[data-tab]");
+      if (!foundryTab || !tabs.contains(foundryTab)) return;
+      nativeEarlyTabClicks.push(foundryTab.dataset.tab);
+      ui.sidebar.changeTab(foundryTab.dataset.tab, "primary");
+    }, true);
     Hooks.callAll("renderSidebar", ui.sidebar, sidebar);
   });
   assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1);
@@ -707,6 +714,21 @@ try {
   assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab > i.fa-headset").count(), 1,
     "Ícone de headset discreto e consistente com os demais");
   assert.equal(await hudPage.locator("#sidebar-content .rpgup-sidebar-pane").count(), 1);
+  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab[data-tab]").count(), 0,
+    "HUD control MUST NOT register as a native Foundry data-tab");
+  assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab[data-group]").count(), 0,
+    "HUD control MUST NOT join a Foundry tabGroup");
+  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
+    "static", "When the HUD is closed, the native sidebar layout is untouched");
+  await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").click();
+  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
+    "relative", "HUD overlays without replacing Foundry's native panel");
+  assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.primary), "settings",
+    "Clicking the headset must NOT alter Foundry internal tab selection");
+  assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), [],
+    "Foundry's EARLY capture listener must never see the headset as a tab");
+  assert.equal(await hudPage.locator(".native-settings").evaluate(el => getComputedStyle(el).display), "block",
+    "Foundry native Settings panel must remain rendered while overlay is showing");
   await hudPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
   assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "HUD não cria janela separada");
@@ -772,10 +794,13 @@ try {
     "Foundry must still own the active native tab while the HUD is open");
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
+  assert.equal(await hudPage.locator("#sidebar-content").evaluate(el => getComputedStyle(el).position),
+    "static", "Leaving HUD restores original native sidebar positioning");
   assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
-  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches[0]),
-    { tabName: "settings", group: "sidebar" },
-    "Leaving HUD by clicking already selected Settings must FORCE Foundry native tab refresh");
+  assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), ["settings"],
+    "Foundry owns the Settings click even when it was already selected");
+  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches), [],
+    "No forced tab changes or DOM intervention are needed with an isolated overlay");
   await hudPage.locator("#native-options-test").click();
   assert.equal(await hudPage.evaluate(() => globalThis.nativeOptionsClicks), 1,
     "Opções nativas devem funcionar ao primeiro clique após sair do HUD");
@@ -783,10 +808,12 @@ try {
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
   await hudPage.locator("#sidebar-tabs [data-tab=chat]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
-  assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.sidebar), "chat",
+  assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.primary), "chat",
     "Native sidebar's original event handler must receive and complete the Chat click");
-  assert.equal(await hudPage.evaluate(() => nativeForcedSwitches.at(-1)?.tabName), "settings",
-    "Different tabs must use their native Foundry handler, not a forced duplicate navigation");
+  assert.deepEqual(await hudPage.evaluate(() => nativeEarlyTabClicks), ["settings", "chat"],
+    "Both original native buttons handle their own clicks in capture phase");
+  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches), [],
+    "HUD does not touch native tab activation even when switching to Chat");
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
   await hudPage.locator("#native-options-test").click();

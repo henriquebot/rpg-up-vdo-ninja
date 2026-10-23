@@ -63,31 +63,29 @@ function install() {
   // rail. Keep it as a sibling of an existing tab in the same native group.
   const nativeTab = nav.querySelector('[data-tab="settings"]') ?? nav.querySelector("[data-tab]");
   if (!nativeTab?.parentElement) return null;
-  const trigger = nativeTab.cloneNode(false);
-  trigger.removeAttribute("id");
-  trigger.removeAttribute("data-action");
-  trigger.removeAttribute("aria-controls");
-  trigger.removeAttribute("data-tooltip");
-  trigger.removeAttribute("data-tooltip-text");
-  trigger.removeAttribute("aria-describedby");
-  trigger.dataset.tab = TAB;
+  // Crucial: NEVER insert a fake [data-tab] into Foundry's native tabs.
+  // Sidebar._onClickTab can run on an ancestor in capture phase before a
+  // module listener has a chance to stop the event. It may record our unknown
+  // tab internally, causing the next native click to fail until switching tabs.
+  // Keep only the native button's visual classes/style, not its controller data.
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = nativeTab.className;
   trigger.classList.remove("active", "selected");
   trigger.classList.add("rpgup-hud-tab");
-  if (trigger.tagName === "BUTTON") trigger.type = "button";
-  else if (trigger.tagName === "A") trigger.removeAttribute("href");
+  trigger.style.cssText = nativeTab.style.cssText;
   trigger.setAttribute("aria-label", "HUD de câmeras");
-  trigger.setAttribute("aria-selected", "false");
+  trigger.setAttribute("aria-pressed", "false");
   trigger.replaceChildren(element("i", undefined, { class: "fa-solid fa-headset", "aria-hidden": "true" }));
   tooltip(trigger, "HUD de câmeras · RPGUP VDO.Ninja");
-  // Insert before Settings so it appears inside the existing left icon stack
-  // even when native sidebar groups have their own grid/flex layout.
   nativeTab.before(trigger);
 
   const panel = element("section", undefined, {
     class: "rpgup-vdo rpgup-sidebar-pane", role: "tabpanel",
     "aria-label": "HUD de câmeras", hidden: ""
   });
-  panel.dataset.tab = TAB;
+  // Deliberately NOT a native Foundry [data-tab] panel.
+  panel.dataset.rpgupPanel = TAB;
   const header = element("header", undefined, { class: "rpgup-hud-header" });
   const heading = element("div", undefined, { class: "rpgup-hud-heading" });
   heading.append(
@@ -145,6 +143,9 @@ function install() {
   actions.append(toggle, apply, applyStatus);
   const formHost = element("div", undefined, { class: "rpgup-hud-options" });
   panel.append(header, invite, actions, formHost);
+  // Non-invasive overlay: native sidebar content stays rendered, visible to
+  // Foundry's own tab controller, and retains all its event handlers. This
+  // panel only covers it visually while the HUD is open.
   content.append(panel);
 
   const state = { root, nav, content, trigger, panel, formHost, input, copy, status, refreshToggle };
@@ -153,72 +154,57 @@ function install() {
   void mountForm(state).catch(report);
   refreshToggle();
 
-  // Foundry v13/v14 owns native tab selection in ApplicationV2.tabGroups.
-  // Never mutate a native tab's .active / aria-selected ourselves: doing so
-  // leaves the DOM out of sync with that controller. In particular, clicking
-  // the already-selected Settings tab becomes a no-op until Chat is visited.
-  const selectedNativeTab = () => Array.from(nav.querySelectorAll("[data-tab]")).find(tab =>
-    tab !== trigger && (tab.classList.contains("active") || tab.getAttribute("aria-selected") === "true")) ?? null;
+  // The HUD is intentionally NOT part of Foundry's tabs. Its button is a
+  // regular control, and the panel is an absolutely positioned overlay.
+  // No native .active or aria-selected changes, no changeTab calls, no
+  // preventing propagation of clicks intended for native tabs.
   const deactivate = () => {
     if (panel.hidden) return;
-    content.classList.remove("rpgup-hud-active");
-    nav.classList.remove("rpgup-hud-nav-active");
     panel.hidden = true;
+    content.classList.remove("rpgup-hud-overlay-host");
     trigger.classList.remove("active", "selected");
-    trigger.setAttribute("aria-selected", "false");
+    trigger.setAttribute("aria-pressed", "false");
+    nav.classList.remove("rpgup-hud-nav-active");
   };
   const activate = () => {
-    // We are a visual overlay of the native content pane; the underlying
-    // selected Foundry tab remains selected and fully functional.
-    state.nativeSelection = selectedNativeTab();
     void ui.sidebar?.expand?.();
-    content.classList.add("rpgup-hud-active");
-    nav.classList.add("rpgup-hud-nav-active");
+    content.classList.add("rpgup-hud-overlay-host");
     panel.hidden = false;
     trigger.classList.add("active");
-    trigger.setAttribute("aria-selected", "true");
+    trigger.setAttribute("aria-pressed", "true");
+    nav.classList.add("rpgup-hud-nav-active");
     renderInvite(state);
     refreshToggle();
   };
+  trigger.addEventListener("click", event => {
+    // This ordinary button does not match the native [data-tab] selector.
+    // Avoid canceling the event: Foundry's own sidebar click handling can
+    // safely ignore it instead of desynchronizing its internal tab state.
+    activateHUD();
+  });
   nav.addEventListener("click", event => {
-    const tab = event.target.closest?.("[data-tab]");
-    if (!tab || !nav.contains(tab)) return;
-    if (tab === trigger) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      activate();
-    } else if (!panel.hidden) {
-      // First allow Foundry to handle the *real native click*. Previously
-      // preventDefault + stopImmediatePropagation blocked the sidebar's own
-      // handlers; a forced changeTab during capture was not a replacement.
-      // After Foundry's handler runs, restore an already-active tab if needed.
-      deactivate();
-      const sidebar = ui.sidebar;
-      const tabName = tab.dataset.tab;
-      const group = Object.keys(sidebar?.tabGroups ?? {}).find(key =>
-        sidebar.tabGroups[key] === tabName) ??
-        Object.keys(sidebar?.tabGroups ?? {})[0];
-      if (group && typeof sidebar?.changeTab === "function") {
-        queueMicrotask(() => {
-          // Only touch the same sidebar; user may have switched to another
-          // tab or opened the HUD again during this event.
-          if (panel.hidden && ui.sidebar === sidebar &&
-              sidebar.tabGroups?.[group] === tabName) {
-            sidebar.changeTab(tabName, group, { force: true, navElement: tab });
-          }
-        });
-      }
-    }
-  }, true);
-  // Native tab clicks deactivate above, while programmatic changes are
-  // detected by *comparing* the native selection to its previous value.
-  // The previously selected native tab intentionally stays active in the DOM.
+    const native = event.target.closest?.("[data-tab]");
+    if (!native || !nav.contains(native)) return;
+    // Let the native event bubble normally and do its own work.
+    deactivate();
+  });
+  // Keyboard shortcuts or a programmatic change to a different native tab
+  // must also hide the HUD. The tab currently selected when HUD opens remains
+  // selected (and usable) all along.
+  let nativeOnOpen = null;
+  const activeNative = () => ui.sidebar?.tabGroups?.primary ??
+    ui.sidebar?.tabGroups?.sidebar ??
+    Array.from(nav.querySelectorAll("[data-tab]")).find(el =>
+      el.classList.contains("active") || el.getAttribute("aria-selected") === "true")?.dataset.tab;
+  const activateHUD = () => {
+    nativeOnOpen = activeNative();
+    activate();
+  };
   const observer = new MutationObserver(() => {
-    if (panel.hidden) return;
-    if (selectedNativeTab() !== state.nativeSelection || !trigger.classList.contains("active")) deactivate();
+    if (!panel.hidden && activeNative() !== nativeOnOpen) deactivate();
   });
   observer.observe(nav, { attributes: true, subtree: true, attributeFilter: ["class", "aria-selected"] });
-  state.activate = activate;
+  state.activate = activateHUD;
   return state;
 }
 
