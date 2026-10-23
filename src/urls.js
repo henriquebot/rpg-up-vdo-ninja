@@ -46,9 +46,10 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
   const streamId = Object.hasOwn(config.slots, user.id) ? config.slots[user.id] : null;
   if (!streamId) throw new Error("O GM ainda não associou um Stream ID ao seu usuário.");
   url.searchParams.set("push", streamId);
-  // Supported VDO.Ninja sender-side option: remove the room/branding
-  // header inside the iframe while preserving all native A/V controls.
-  url.searchParams.set("hideheader", "");
+  // Keep the VDO.Ninja native top header (including its viewer indicator)
+  // visible in the embedded dock and in individual publisher links.
+  // &showheader explicitly restores it even if another VDO UI mode hides it.
+  url.searchParams.set("showheader", "");
   url.searchParams.set("label", user.name);
   // Label is already the Foundry username; showlabels makes it visible on each tile.
   url.searchParams.set("showlabels", "rounded");

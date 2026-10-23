@@ -67,13 +67,16 @@ for (let count = 1; count <= 4; count++) {
 }
 
 
-test("iframe oculta o cabeçalho VDO sem eliminar os controles nativos", () => {
+test("iframe mostra sempre o cabeçalho original do VDO; OBS continua com saída limpa", () => {
   const sender = new URL(participantURL(world, users[0], { avatar: "none" }, users));
-  assert.equal(sender.searchParams.has("hideheader"), true);
+  assert.equal(sender.searchParams.has("hideheader"), false);
+  assert.equal(sender.searchParams.has("showheader"), true);
   assert.equal(sender.searchParams.has("cleanoutput"), false);
   assert.equal(sender.searchParams.get("push"), "slot_u0");
   const viewer = new URL(soloURL(world, "u0", users));
+  assert.equal(viewer.searchParams.has("showheader"), false);
   assert.equal(viewer.searchParams.has("hideheader"), false);
+  assert.equal(viewer.searchParams.has("cleanoutput"), true);
 });
 
 test("dock acoplada toca os quatro cantos sem margens; flutuante mantém distância", () => {

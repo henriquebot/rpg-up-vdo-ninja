@@ -101,7 +101,8 @@ try {
   await page.screenshot({ path: path.join(screenshotDirectory, "dock-settings-desktop.png") });
   const initial = navigations;
   const initialURL = await page.locator("iframe").getAttribute("src");
-  assert.equal(new URL(initialURL).searchParams.has("hideheader"), true, "VDO.Ninja não mostra a linha You are in room");
+  assert.equal(new URL(initialURL).searchParams.has("hideheader"), false, "VDO.Ninja não deve esconder o cabeçalho original");
+  assert.equal(new URL(initialURL).searchParams.has("showheader"), true, "Barra nativa superior deve permanecer visível no iframe");
   assert.equal(new URL(initialURL).searchParams.get("push"), "slot_gm");
   assert.equal(new URL(initialURL).searchParams.get("showlabels"), "rounded");
   const initialCSS = decodeURIComponent(atob(new URL(initialURL).searchParams.get("base64css")));
