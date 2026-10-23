@@ -19,17 +19,23 @@ const HEADER_CSS = [
 // A narrow dock remains one column, wider layouts naturally use more columns.
 // Row height fits both the local iframe viewport and the feed aspect ratio.
 const GRID_CSS = [
+  // VDO's real room mixer gives every camera an absolutely positioned wrapper
+  // with inline left/top/width/height (lib.js: updateMixerRun). A grid container
+  // alone cannot move these absolute children: override the actual wrapper.
   "#gridlayout{--rg-count:1;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr))!important;grid-template-rows:none!important;grid-auto-rows:minmax(0,min(calc((100dvh - 88px - (var(--rg-count) - 1)*6px)/var(--rg-count)),calc((100vw - 12px)*.5625)))!important;align-content:start!important;gap:6px!important;overflow:hidden!important}",
-  "#gridlayout>*{box-sizing:border-box!important;grid-area:auto!important;min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;max-width:100%!important;margin:0!important;overflow:hidden!important}",
-  "#gridlayout .tile{width:100%!important;height:100%!important;object-fit:contain!important}"
+  "#gridlayout>.container_holder_video{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;transition:none!important;grid-area:auto!important;box-sizing:border-box!important;width:100%!important;height:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;margin:0!important;overflow:hidden!important}",
+  // The mixer also places each holder absolutely and sizes it to the old
+  // camera rectangle. Tie the holder to its newly responsive parent instead.
+  "#gridlayout>.container_holder_video>.holder{top:0!important;left:0!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important}",
+  "#gridlayout>.container_holder_video .tile{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}"
 ].join("");
 
-// The count is derived from VDO's rendered children, not Foundry user records.
-// This responds immediately to peers joining/leaving and accounts for personal
-// browser zoom without an observer or extra DOM access across the iframe.
+// Count VDO's *actual* absolutely-positioned camera holders instead of
+// arbitrary grid children (which may contain backgrounds, previews or overlays).
+// This re-evaluates as feeds enter or leave without timers or native DOM access.
 const GRID_COUNT_CSS = Array.from({ length: 15 }, (_, i) => {
   const count = i + 2;
-  return `#gridlayout:has(>:nth-child(${count})){--rg-count:${count}}`;
+  return `#gridlayout:has(>.container_holder_video:nth-child(${count})){--rg-count:${count}}`;
 }).join("");
 
 export function presentationCSS(mode, { director = false } = {}) {
