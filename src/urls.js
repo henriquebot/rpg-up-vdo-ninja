@@ -53,6 +53,9 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
   url.searchParams.set("label", user.name);
   // Label is already the Foundry username; showlabels makes it visible on each tile.
   url.searchParams.set("showlabels", "rounded");
+  const isDirector = config.directorUserId === user.id && user.isGM;
+  // The optional display experiment is injected after iframe load. Embedding
+  // several KB of grid CSS here could overflow the safe 6900-char VDO URL.
   const css = themeCSS(config, users);
   if (css) url.searchParams.set("base64css", encodeThemeCSS(css));
   if (config.theme !== "none" && config.audio === "vdo") {
@@ -60,7 +63,7 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
     // and was invisible in real calls. 2 draws the VDO audio activity border.
     url.searchParams.set("meterstyle", "2");
   }
-  if (config.directorUserId === user.id && user.isGM) {
+  if (isDirector) {
     url.searchParams.set("director", config.roomId);
     url.searchParams.set("showdirector", "1");
     url.searchParams.set("previewmode", "");
