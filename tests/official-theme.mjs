@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { themeCSS, encodeThemeCSS } from "../src/theme.js";
+import { presentationCSS } from "../src/presentation.js";
 
 const { chromium } = await import("playwright");
 
@@ -50,5 +51,38 @@ try {
   assert.notEqual(result.shadow, "none", "Official VDO must apply Sci-fi glow CSS");
   assert.notEqual(result.outline, "none", "Official VDO must apply the camera outline");
   assert.equal(result.appliedColor, "#aabbdd", "Stream ID selects Foundry user color");
+  // Upstream compatibility probe: the real VDO website (not our fixture)
+  // must accept the documented iframe style command sent by the parent.
+  const host = await context.newPage();
+  await host.goto("about:blank");
+  const betaURL = new URL("https://vdo.ninja/");
+  betaURL.searchParams.set("room", "RPGUPBetaProbe");
+  betaURL.searchParams.set("push", "rpgup_beta_probe");
+  betaURL.searchParams.set("videodevice", "0");
+  betaURL.searchParams.set("audiodevice", "0");
+  betaURL.searchParams.set("noaudio", "");
+  betaURL.searchParams.set("showheader", "");
+  await host.evaluate(url => new Promise((resolve, reject) => {
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("allow", "camera; microphone; autoplay; fullscreen");
+    iframe.onload = resolve;
+    iframe.onerror = () => reject(new Error("VDO beta iframe indisponível"));
+    iframe.src = url;
+    document.body.append(iframe);
+  }), betaURL.href);
+  const header = host.frameLocator("iframe").locator("#header");
+  await header.waitFor({ state: "attached" });
+  const css = presentationCSS("minimal") + "#header{--rpgup-beta-probe:yes!important}";
+  await host.locator("iframe").evaluate((iframe, cssText) =>
+    iframe.contentWindow.postMessage({ style: cssText }, "https://vdo.ninja"), css);
+  const accepted = await header.evaluate(async element => {
+    for (let n = 0; n < 40; n++) {
+      if (getComputedStyle(element).getPropertyValue("--rpgup-beta-probe").trim() === "yes") return true;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return false;
+  });
+  assert.equal(accepted, true, "Official VDO.Ninja iframe must accept its documented style postMessage command");
+  await host.close();
   console.log("Official VDO CSS and meter parse smoke OK:", JSON.stringify(result));
 } finally { await browser.close(); }
