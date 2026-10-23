@@ -69,7 +69,7 @@ export function validateAudioFilters(input) {
 }
 export const DEFAULT_WORLD = { roomId: "", extraQuery: "", audio: "discord", audioFilters: { ...DEFAULT_AUDIO_FILTERS }, directorUserId: "", slots: {}, quality: "native", avatars: {}, roomLayout: "native", theme: "modern" };
 export const DEFAULT_PREFS = {
-  dock: "left", autoOpen: true, presentation: "native",
+  dock: "left", autoOpen: true, presentation: "adaptive",
   zoom: 1, avatar: "foundry", avatarURL: "",
   sideWidth: 440, barHeight: 360,
   floating: { width: 720, height: 600, left: 120, top: 80 }
@@ -155,11 +155,19 @@ export function fillMissingSlots(slots, users, randomBytes = size => crypto.getR
 
 const bounded = (value, fallback, min, max) => Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
 export function normalizePrefs(input = {}) {
+  // v4: adaptive is now the default for all users, including old installs.
+  // Old native was the implicit default; after migrating to v4 an explicitly
+  // selected native mode remains native on every subsequent load.
+  const oldPresentation = (Number(input?.schemaVersion) || 0) < 4;
+  const presentation = oldPresentation && input?.presentation !== "minimal"
+    ? "adaptive"
+    : ["native", "minimal", "adaptive"].includes(input?.presentation)
+      ? input.presentation : DEFAULT_PREFS.presentation;
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     dock: Object.hasOwn(DOCKS, input?.dock) ? input.dock : DEFAULT_PREFS.dock,
     autoOpen: typeof input?.autoOpen === "boolean" ? input.autoOpen : true,
-    presentation: ["native", "minimal", "adaptive"].includes(input?.presentation) ? input.presentation : "native",
+    presentation,
     zoom: bounded(input?.zoom, 1, 0.5, 1.5),
     avatar: Object.hasOwn(AVATARS, input?.avatar) ? input.avatar : "foundry",
     avatarURL: typeof input?.avatarURL === "string" ? input.avatarURL.trim().slice(0, 2048) : "",
