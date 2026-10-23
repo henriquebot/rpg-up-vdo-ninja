@@ -141,7 +141,8 @@ function install() {
     if (connect) connect.click();
     else ui.notifications.warn("As opções da câmera ainda não carregaram.");
   });
-  actions.append(toggle, apply);
+  const applyStatus = element("p", "", { class: "rpgup-hud-apply-status", role: "status", "aria-live": "polite" });
+  actions.append(toggle, apply, applyStatus);
   const formHost = element("div", undefined, { class: "rpgup-hud-options" });
   panel.append(header, invite, actions, formHost);
   content.append(panel);
