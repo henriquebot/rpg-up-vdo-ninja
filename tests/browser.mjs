@@ -783,9 +783,10 @@ try {
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
   await hudPage.locator("#sidebar-tabs [data-tab=chat]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
-  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches.at(-1)),
-    { tabName: "chat", group: "sidebar" },
-    "HUD must force Foundry native transition even when the target differs");
+  assert.equal(await hudPage.evaluate(() => ui.sidebar.tabGroups.sidebar), "chat",
+    "Native sidebar's original event handler must receive and complete the Chat click");
+  assert.equal(await hudPage.evaluate(() => nativeForcedSwitches.at(-1)?.tabName), "settings",
+    "Different tabs must use their native Foundry handler, not a forced duplicate navigation");
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
   await hudPage.locator("#native-options-test").click();
