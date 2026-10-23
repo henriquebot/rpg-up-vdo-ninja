@@ -664,10 +664,26 @@ try {
     const content = document.createElement("div");
     content.id = "sidebar-content";
     content.style.cssText = "flex:1;min-height:0;";
-    content.innerHTML = '<section class="native-settings">Painel original</section>';
+    content.innerHTML = '<section class="native-settings">Painel original <button type="button" id="native-options-test">Abrir opções nativas</button></section>';
     sidebar.append(tabs, content);
     document.body.append(sidebar);
-    ui.sidebar = { element: sidebar, expand() { return Promise.resolve(); } };
+    globalThis.nativeOptionsClicks = 0;
+    content.querySelector("#native-options-test").addEventListener("click", () => globalThis.nativeOptionsClicks++);
+    // Emulate Foundry ApplicationV2 tabGroups: clicking a tab that is already
+    // selected is a no-op. Manually removing .active while the controller still
+    // records "settings" reproduces the original bug in real Foundry.
+    ui.sidebar = { element: sidebar, tabGroups: { sidebar: "settings" }, expand() { return Promise.resolve(); } };
+    tabs.addEventListener("click", event => {
+      const native = event.target.closest(".sidebar-tabs-rail > [data-tab]:not(.rpgup-hud-tab)");
+      if (!native || ui.sidebar.tabGroups.sidebar === native.dataset.tab) return;
+      ui.sidebar.tabGroups.sidebar = native.dataset.tab;
+      for (const tab of nativeRail.querySelectorAll("[data-tab]:not(.rpgup-hud-tab)")) {
+        const active = tab === native;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", String(active));
+      }
+      content.querySelector(".native-settings").hidden = native.dataset.tab !== "settings";
+    });
     Hooks.callAll("renderSidebar", ui.sidebar, sidebar);
   });
   assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1);
@@ -698,10 +714,26 @@ try {
     document.querySelector(".rpgup-invite-copy input")?.value.includes("HudTestRoom001"));
   assert.equal(await hudPage.locator("#rpgup-vdo-world-config").count(), 0, "Salvar não reabre janela antiga");
   assert.equal(await hudPage.locator('.rpgup-sidebar-pane input[name="roomId"]').inputValue(), "HudTestRoom001");
+  // Regression: HUD overlays Settings without corrupting native selection.
+  // The *first* click on Settings must restore its real options; it must not
+  // require visiting Chat/Actors and returning to make buttons respond.
+  assert.equal(await hudPage.locator('#sidebar-tabs [data-tab="settings"]').getAttribute("aria-selected"), "true",
+    "Foundry must still own the active native tab while the HUD is open");
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
+  assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
+  await hudPage.locator("#native-options-test").click();
+  assert.equal(await hudPage.evaluate(() => globalThis.nativeOptionsClicks), 1,
+    "Opções nativas devem funcionar ao primeiro clique após sair do HUD");
   await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
+  await hudPage.locator("#sidebar-tabs [data-tab=chat]").click();
+  assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
+  await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
+  assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
+  await hudPage.locator("#native-options-test").click();
+  assert.equal(await hudPage.evaluate(() => globalThis.nativeOptionsClicks), 2,
+    "Navegação Chat → Configurações preserva os controles nativos");
   await hudPage.evaluate(() => Hooks.callAll("renderSidebar", ui.sidebar, ui.sidebar.element));
   assert.equal(await hudPage.locator("#sidebar-tabs .rpgup-hud-tab").count(), 1, "Renderizar a barra não duplica o HUD");
   await hudPage.screenshot({ path: path.join(screenshotDirectory, "premium-sidebar-hud.png") });
