@@ -32,7 +32,7 @@ for (let count = 1; count <= 4; count++) {
       const members = users.slice(0, count);
       const base = { ...world, slots: Object.fromEntries(members.map(user => [user.id, world.slots[user.id]])) };
       const before = structuredClone(base);
-      const prefs = { dock, avatar: "none" };
+      const prefs = { schemaVersion: 4, presentation: "native", dock, avatar: "none" };
       for (const audio of ["discord", "vdo"]) {
         for (const directorUserId of ["", "u0"]) {
           const normal = { ...base, audio, directorUserId };
