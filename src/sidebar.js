@@ -128,7 +128,20 @@ function install() {
       refreshToggle();
     } catch (error) { report(error); }
   });
-  actions.append(toggle);
+  // Persistent action: every tab can change room/camera settings which may
+  // require reconnecting. Do not make users hunt for the Connection tab.
+  // Reuse the personal tab's handler because it awaits queued preference writes
+  // and saves the GM's pending room draft before rejoining VDO.
+  const apply = tooltip(button("Aplicar / reconectar", "fa-check", {
+    class: "rpgup-primary rpgup-hud-apply",
+    "aria-label": "Aplicar alterações e reconectar VDO"
+  }), "Disponível em qualquer guia. Salva alterações pendentes e reinicia sua conexão VDO.");
+  apply.addEventListener("click", () => {
+    const connect = panel.querySelector(".rpgup-personal-connect .rpgup-primary");
+    if (connect) connect.click();
+    else ui.notifications.warn("As opções da câmera ainda não carregaram.");
+  });
+  actions.append(toggle, apply);
   const formHost = element("div", undefined, { class: "rpgup-hud-options" });
   panel.append(header, invite, actions, formHost);
   content.append(panel);
@@ -174,20 +187,25 @@ function install() {
       event.stopImmediatePropagation();
       activate();
     } else if (!panel.hidden) {
+      // First allow Foundry to handle the *real native click*. Previously
+      // preventDefault + stopImmediatePropagation blocked the sidebar's own
+      // handlers; a forced changeTab during capture was not a replacement.
+      // After Foundry's handler runs, restore an already-active tab if needed.
       deactivate();
-      // When the HUD overlays an already-selected native tab (typically
-      // Settings), Foundry's ApplicationV2 may ignore another click on that
-      // same tab. Force the official sidebar controller to re-activate it.
-      // No manual .active/aria-selected mutation, and no fake DOM clicks.
       const sidebar = ui.sidebar;
-      if (typeof sidebar?.changeTab === "function") {
-        const group = Object.keys(sidebar.tabGroups ?? {}).find(key =>
-          sidebar.tabGroups[key] === tab.dataset.tab) ??
-          (Object.hasOwn(sidebar.tabGroups ?? {}, "sidebar") ? "sidebar" :
-            Object.keys(sidebar.tabGroups ?? {})[0] ?? "sidebar");
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        sidebar.changeTab(tab.dataset.tab, group, { force: true, navElement: tab });
+      const tabName = tab.dataset.tab;
+      const group = Object.keys(sidebar?.tabGroups ?? {}).find(key =>
+        sidebar.tabGroups[key] === tabName) ??
+        Object.keys(sidebar?.tabGroups ?? {})[0];
+      if (group && typeof sidebar?.changeTab === "function") {
+        queueMicrotask(() => {
+          // Only touch the same sidebar; user may have switched to another
+          // tab or opened the HUD again during this event.
+          if (panel.hidden && ui.sidebar === sidebar &&
+              sidebar.tabGroups?.[group] === tabName) {
+            sidebar.changeTab(tabName, group, { force: true, navElement: tab });
+          }
+        });
       }
     }
   }, true);
