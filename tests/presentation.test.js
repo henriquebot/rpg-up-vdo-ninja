@@ -43,8 +43,8 @@ test("adaptativo atinge filhos reais do mosaico e calcula altura no iframe", () 
   assert.match(css, /\.container_holder_video>\.holder/);
   assert.match(css, /100dvh/);
   assert.match(css, /100vw/);
-  assert.match(css, /:has\(>\.container_holder_video:nth-child\(6\)\)/);
-  assert.match(css, /--rg-count/);
+  assert.match(css, /:has\(>:nth-child\(6\)\)/);
+  assert.match(css, /--n:/);
   assert.match(css, /object-fit:contain/);
   assert.doesNotMatch(css, /#controlButtons|#mutebutton|#hangupbutton/);
   assert.equal(presentationCSS("adaptive", { director: true }), "");
