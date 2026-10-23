@@ -426,6 +426,8 @@ try {
   assert.equal(await guest.locator("#rpgup-world-tab-general").count(), 0, "Jogador não recebe configuração de Room");
   assert.equal(await guest.locator("#rpgup-world-tab-participants").count(), 0, "Jogador não recebe links e slots");
   assert.equal(await guest.locator("#rpgup-world-tab-connect").count(), 1);
+  assert.equal(await guest.locator(".rpgup-global-reconnect button").count(), 1,
+    "Players have a persistent reconnect button in the same native window");
   assert.equal(new URL(await guest.locator("iframe").getAttribute("src")).searchParams.get("push"), "slot_a");
   assert.ok(new URL(await guest.locator("iframe").getAttribute("src")).searchParams.get("avatar").startsWith("data:image/"));
   assert.equal(await guest.locator('[name="Self-preview"]').count(), 0);
@@ -665,14 +667,24 @@ try {
   await controlsPage.evaluate(() =>
     sceneControlSpec.tokens.tools["rpgup-vdo-options"].onChange());
   await controlsPage.locator("#rpgup-vdo-world-config").waitFor({ state: "visible" });
+  const applyAnywhere = controlsPage.getByRole("button", { name: "Aplicar alterações e reconectar VDO" });
+  assert.equal(await applyAnywhere.count(), 1, "One persistent Apply / reconnect in native settings");
   assert.equal(await controlsPage.locator("iframe").count(), 1, "Opening settings must not duplicate VDO iframe");
   await controlsPage.getByRole("button", { name: "Minha câmera", exact: true }).click();
   await controlsPage.getByRole("tab", { name: "Janela", exact: true }).click();
   assert.equal(await controlsPage.getByRole("combobox", { name: "Exibição das câmeras" }).isVisible(), true,
     "Personal camera settings work without switching right-sidebar tabs");
+  assert.equal(await applyAnywhere.isVisible(), true, "Apply is visible on personal Window tab");
+  await controlsPage.getByRole("tab", { name: "Avatar", exact: true }).click();
+  assert.equal(await applyAnywhere.isVisible(), true, "Apply is visible on personal Avatar tab");
   await controlsPage.getByRole("button", { name: "Mesa", exact: true }).click();
   await controlsPage.getByRole("tab", { name: "Sala", exact: true }).click();
   assert.equal(await controlsPage.locator('input[name="roomId"]').isVisible(), true);
+  assert.equal(await applyAnywhere.isVisible(), true, "Apply is visible on GM Room tab");
+  await applyAnywhere.click();
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#rpgup-vdo-world-config .rpgup-global-reconnect-status")?.textContent.length > 0);
+  assert.match(await controlsPage.locator(".rpgup-global-reconnect-status").innerText(), /Reconexão|Aplicando/i);
   await controlsPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   await controlsPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-world-config"));
   assert.deepEqual(controlsErrors, []);
