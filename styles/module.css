@@ -256,6 +256,12 @@ body.rpgup-vdo-docked #interface {
 #sidebar-tabs .rpgup-hud-tab[aria-selected="true"] {
   color: var(--color-text-emphatic, #f5d6a6);
 }
+/* Keep the core-selected native tab state intact, but visually give the
+   HUD the focus while it is displayed. No native classes are changed. */
+#sidebar-tabs.rpgup-hud-nav-active [data-tab].active:not(.rpgup-hud-tab) {
+  filter: grayscale(1);
+  opacity: .55;
+}
 /* Only when our tab is active: leave native panes untouched when switching back. */
 .rpgup-hud-active > :not(.rpgup-sidebar-pane) { display: none !important; }
 .rpgup-sidebar-pane[hidden],
