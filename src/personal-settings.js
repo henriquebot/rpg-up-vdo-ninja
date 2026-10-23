@@ -1,6 +1,7 @@
 import { MODULE_ID, DOCKS, AVATARS, normalizePrefs } from "./config.js";
 import { userPrefs, savePrefs } from "./settings.js";
 import { element, select, field, tooltip, button, report } from "./dom.js";
+import { DOCK_PRESENTATIONS } from "./presentation.js";
 
 /**
  * Personal, per-user controls embedded in the unified settings ApplicationV2.
@@ -71,6 +72,7 @@ export function createPersonalTabs() {
   const larger = tooltip(element("button", "+", { type: "button", "aria-label": "Aumentar zoom" }), "Aumentar sem reconectar");
   const zoom = element("div", undefined, { class: "rpgup-zoom", role: "group", "aria-label": "Zoom do VDO.Ninja" });
   zoom.append(smaller, zoomReset, larger);
+  const presentation = select(DOCK_PRESENTATIONS, prefs.presentation, "Exibição das câmeras");
   const auto = element("input", undefined, { type: "checkbox" });
   auto.checked = prefs.autoOpen;
   const autoField = field("Abrir câmeras ao entrar no mundo", auto, "Não liga sua câmera automaticamente.");
@@ -86,6 +88,7 @@ export function createPersonalTabs() {
     field("Posição da janela", dockPosition, "Acoplada às bordas ou flutuante. Não reconecta."),
     field("Largura / altura na borda", size, "Ajuste a largura lateral ou a altura superior/inferior."),
     field("Zoom da sala", zoom, "Só altera a escala visual do iframe."),
+    field("Exibição das câmeras", presentation, "Experimental e só para você. Original preserva o VDO.Ninja. Cabeçalho mínimo remove a marca e o nome da sala. Ajustar câmeras tenta mostrar todos sem rolagem; pode deixar vídeos menores. Para voltar, escolha Original e clique em Aplicar / reconectar."),
     autoField
   );
   dockPosition.addEventListener("change", () => { update({ dock: dockPosition.value }, { layout: true }); syncSize(); });
@@ -93,6 +96,7 @@ export function createPersonalTabs() {
     const side = ["left", "right"].includes(prefs.dock);
     update(side ? { sideWidth: Number(size.value) } : { barHeight: Number(size.value) }, { layout: true });
   });
+  presentation.addEventListener("change", () => update({ presentation: presentation.value }, { reconnect: true }));
   auto.addEventListener("change", () => update({ autoOpen: auto.checked }));
   function changeZoom(delta, reset = false) {
     const next = reset ? 1 : Math.round(Math.max(.5, Math.min(1.5, prefs.zoom + delta)) * 100) / 100;
@@ -164,6 +168,7 @@ export function createPersonalTabs() {
       { tab: "connect", target: () => reconnect, text: "Aplicar / reconectar entra na sala e reinicia sua câmera." },
       { tab: "window", target: () => dockPosition, text: "Escolha onde a dock fica. A posição é salva só para seu usuário." },
       { tab: "window", target: () => zoom, text: "Altere o zoom sem reconectar." },
+      { tab: "window", target: () => presentation, text: "Teste o cabeçalho mínimo ou o layout adaptativo. Use Original para reverter; Aplicar / reconectar atualiza o vídeo." },
       { tab: "avatar", target: () => avatar, text: "Escolha a imagem da câmera desligada." }
     ]
   };
