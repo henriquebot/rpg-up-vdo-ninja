@@ -1,6 +1,5 @@
 import { VDO_BASE, QUALITY_PRESETS, parseExtraQuery, validateWorld, normalizePrefs } from "./config.js";
 import { themeCSS, encodeThemeCSS } from "./theme.js";
-import { presentationCSS } from "./presentation.js";
 
 // Nginx commonly rejects request-lines above ~8 KB. Leave room for URL
 // encoding, proxies, and future VDO parameters: NEVER navigate a longer URL.
@@ -55,7 +54,9 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
   // Label is already the Foundry username; showlabels makes it visible on each tile.
   url.searchParams.set("showlabels", "rounded");
   const isDirector = config.directorUserId === user.id && user.isGM;
-  const css = [themeCSS(config, users), presentationCSS(prefs.presentation, { director: isDirector })].filter(Boolean).join("");
+  // The optional display experiment is injected after iframe load. Embedding
+  // several KB of grid CSS here could overflow the safe 6900-char VDO URL.
+  const css = themeCSS(config, users);
   if (css) url.searchParams.set("base64css", encodeThemeCSS(css));
   if (config.theme !== "none" && config.audio === "vdo") {
     // Official native speaker outline: meterstyle=4 only sets a data attribute
