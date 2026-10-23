@@ -262,11 +262,16 @@ body.rpgup-vdo-docked #interface {
   filter: grayscale(1);
   opacity: .55;
 }
-/* Only when our tab is active: leave native panes untouched when switching back. */
-.rpgup-hud-active > :not(.rpgup-sidebar-pane) { display: none !important; }
+/* The Foundry sidebar panes must NEVER be hidden or disabled by our HUD.
+   Instead, cover the active native pane visually with a temporary overlay.
+   Closing it immediately exposes the same live native tab and its handlers. */
+.rpgup-hud-overlay-host { position: relative !important; }
 .rpgup-sidebar-pane[hidden],
 .rpgup-tab-button[hidden] { display: none !important; }
 .rpgup-sidebar-pane {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
   --rpgup-radius: 11px;
   box-sizing: border-box;
   display: flex;
