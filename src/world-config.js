@@ -8,6 +8,24 @@ import { element, select, field, tooltip, button, downloadJSON, report } from ".
 import { createIconTabs } from "./tabs.js";
 import { createPersonalTabs } from "./personal-settings.js";
 
+// A persistent action in the normal Foundry configuration window, not the
+// right sidebar. It delegates to the personal connection handler that waits
+// for saving preferences and saves GM world drafts before reconnecting.
+function addPersistentReconnect(root) {
+  const toolbar = element("div", undefined, { class: "rpgup-global-reconnect" });
+  const apply = button("Aplicar / reconectar", "fa-check", {
+    class: "rpgup-primary", "aria-label": "Aplicar alterações e reconectar VDO"
+  });
+  const status = element("p", "", { class: "rpgup-global-reconnect-status", role: "status", "aria-live": "polite" });
+  apply.addEventListener("click", () => {
+    const native = root.querySelector(".rpgup-personal-connect .rpgup-primary");
+    if (native) native.click();
+    else status.textContent = "Opções da câmera indisponíveis. Reabra as configurações.";
+  });
+  toolbar.append(apply, status);
+  root.prepend(toolbar);
+}
+
 export class WorldConfig extends foundry.applications.api.ApplicationV2 {
   static instance;
   static DEFAULT_OPTIONS = {
@@ -36,6 +54,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
         tourSteps: personal.tourSteps
       });
       container.append(tabs.root);
+      addPersistentReconnect(container);
       this._form = container;
       return container;
     }
@@ -391,6 +410,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
       ]
     });
     form.append(tabs.root, footer);
+    addPersistentReconnect(form);
     this._readDraft = () => {
       const slots = { ...config.slots };
       for (const [userId, input] of this._inputs) {
