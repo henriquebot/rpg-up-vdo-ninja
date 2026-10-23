@@ -111,16 +111,33 @@ try {
       grid.replaceChildren();
       for (let i = 0; i < n; i++) {
         const tile = document.createElement("div");
-        tile.className = "vidcon";
-        tile.appendChild(document.createElement("video"));
-        tile.querySelector("video").className = "tile";
+        tile.className = "container_holder_video";
+        // Mimic VDO.Ninja updateMixerRun's inline positioning, which previously
+        // escaped the adaptive CSS test because synthetic tiles were static.
+        tile.style.cssText = "position:absolute;left:0px;top:" + (i * 310) +
+          "px;width:252px;height:300px;transition:top 200ms";
+        const holder = document.createElement("div");
+        holder.className = "holder";
+        holder.style.cssText = "position:absolute;top:30px;left:0;width:252px;height:300px";
+        const video = document.createElement("video");
+        video.className = "tile";
+        holder.append(video);
+        tile.append(holder);
         grid.append(tile);
       }
       const boxes = [...grid.children].map(el => el.getBoundingClientRect().toJSON());
       results.push({
         n,
         display: getComputedStyle(grid).display,
+        position: getComputedStyle(grid.firstElementChild).position,
         cardHeight: boxes[0]?.height,
+        holderFits: [...grid.children].every(el => {
+          const a = el.getBoundingClientRect();
+          const b = el.firstElementChild.getBoundingClientRect();
+          return Math.abs(a.left - b.left) <= 2 && Math.abs(a.top - b.top) <= 2 &&
+            Math.abs(a.width - b.width) <= 2 && Math.abs(a.height - b.height) <= 2;
+        }),
+        gaps: boxes.slice(1).map((box, i) => box.top - boxes[i].bottom),
         visible: boxes.every(box => box.width > 0 && box.height > 15 && box.top >= 0 && box.bottom <= innerHeight - 28),
         rowsSeparate: boxes.every((box, i) => i === 0 || box.top >= boxes[i - 1].bottom - 2),
         scrollbar: grid.scrollHeight > grid.clientHeight + 3
@@ -131,6 +148,10 @@ try {
   assert.equal(layout.hiddenBrand, true, "Minimal header must hide VDO branding in the real VDO page");
   for (const record of layout.results) {
     assert.equal(record.display, "grid");
+    assert.equal(record.position, "relative", "Real VDO inline absolute position must be overridden");
+    assert.equal(record.holderFits, true, "Native VDO holder must follow responsive camera size");
+    assert.ok(record.gaps.every(gap => gap >= 4 && gap <= 8),
+      `No oversized empty gaps at ${record.n} feeds: ${JSON.stringify(record.gaps)}`);
     assert.equal(record.visible, true, `All ${record.n} camera tiles fit the viewport`);
     assert.equal(record.rowsSeparate, true, `No spaced-out camera tiles at ${record.n} feeds`);
     assert.equal(record.scrollbar, false, `No forced grid scrollbar at ${record.n} feeds`);
