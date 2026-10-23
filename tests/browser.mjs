@@ -673,17 +673,25 @@ try {
     // Emulate Foundry ApplicationV2 tabGroups: clicking a tab that is already
     // selected is a no-op. Manually removing .active while the controller still
     // records "settings" reproduces the original bug in real Foundry.
-    ui.sidebar = { element: sidebar, tabGroups: { sidebar: "settings" }, expand() { return Promise.resolve(); } };
+    globalThis.nativeForcedSwitches = [];
+    ui.sidebar = {
+      element: sidebar, tabGroups: { sidebar: "settings" },
+      expand() { return Promise.resolve(); },
+      changeTab(tabName, group, { force = false } = {}) {
+        if (force) nativeForcedSwitches.push({ tabName, group });
+        if (this.tabGroups[group] === tabName && !force) return;
+        this.tabGroups[group] = tabName;
+        for (const tab of nativeRail.querySelectorAll("[data-tab]:not(.rpgup-hud-tab)")) {
+          const active = tab.dataset.tab === tabName;
+          tab.classList.toggle("active", active);
+          tab.setAttribute("aria-selected", String(active));
+        }
+        content.querySelector(".native-settings").hidden = tabName !== "settings";
+      }
+    };
     tabs.addEventListener("click", event => {
       const native = event.target.closest(".sidebar-tabs-rail > [data-tab]:not(.rpgup-hud-tab)");
-      if (!native || ui.sidebar.tabGroups.sidebar === native.dataset.tab) return;
-      ui.sidebar.tabGroups.sidebar = native.dataset.tab;
-      for (const tab of nativeRail.querySelectorAll("[data-tab]:not(.rpgup-hud-tab)")) {
-        const active = tab === native;
-        tab.classList.toggle("active", active);
-        tab.setAttribute("aria-selected", String(active));
-      }
-      content.querySelector(".native-settings").hidden = native.dataset.tab !== "settings";
+      if (native) ui.sidebar.changeTab(native.dataset.tab, "sidebar");
     });
     Hooks.callAll("renderSidebar", ui.sidebar, sidebar);
   });
@@ -745,6 +753,9 @@ try {
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
   assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
+  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches[0]),
+    { tabName: "settings", group: "sidebar" },
+    "Leaving HUD by clicking already selected Settings must FORCE Foundry native tab refresh");
   await hudPage.locator("#native-options-test").click();
   assert.equal(await hudPage.evaluate(() => globalThis.nativeOptionsClicks), 1,
     "Opções nativas devem funcionar ao primeiro clique após sair do HUD");
@@ -752,6 +763,9 @@ try {
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), true);
   await hudPage.locator("#sidebar-tabs [data-tab=chat]").click();
   assert.equal(await hudPage.locator(".rpgup-sidebar-pane").isVisible(), false);
+  assert.deepEqual(await hudPage.evaluate(() => nativeForcedSwitches.at(-1)),
+    { tabName: "chat", group: "sidebar" },
+    "HUD must force Foundry native transition even when the target differs");
   await hudPage.locator("#sidebar-tabs [data-tab=settings]").click();
   assert.equal(await hudPage.locator("#sidebar-tabs [data-tab=settings]").getAttribute("aria-selected"), "true");
   await hudPage.locator("#native-options-test").click();
