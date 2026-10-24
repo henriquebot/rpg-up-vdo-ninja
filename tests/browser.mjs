@@ -691,6 +691,33 @@ try {
   assert.match(await controlsPage.locator(".rpgup-global-reconnect-status").innerText(), /Reconexão|Aplicando/i);
   await controlsPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   await controlsPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-world-config"));
+  // DAS Combat UI's Party lives under #interface and is fixed-positioned.
+  // Its own place() runs only on DAS resize/render, so VDO must explicitly
+  // re-evaluate placement when the dock visibility changes.
+  await controlsPage.evaluate(() => {
+    const party = document.createElement("section");
+    party.id = "ddu-party";
+    party.className = "ddu-party";
+    party.textContent = "Personagens DAS";
+    party.style.cssText = "position:fixed;top:50%;left:0;width:92px;height:240px;transform:translateY(-50%);z-index:30";
+    document.querySelector("#interface").append(party);
+    globalThis.dasPlaceCalls = 0;
+    game.modules.set("darsh-dnd-ui", { active: true, api: {
+      party: { element: party, place() {
+        dasPlaceCalls++;
+        party.style.left = "0px";
+      } }
+    } });
+    game.modules.get("rpgup-vdo-ninja").api.dock()._layout();
+  });
+  await controlsPage.waitForFunction(() => {
+    const a = document.querySelector("#rpgup-vdo-room")?.getBoundingClientRect();
+    const b = document.querySelector("#ddu-party")?.getBoundingClientRect();
+    return a && b && b.left >= a.right + 5;
+  });
+  assert.ok(await controlsPage.evaluate(() => dasPlaceCalls) > 0,
+    "VDO should use DAS's public party.place() API");
+
   // End-to-end persistence: collapse does not destroy/reload VDO iframe,
   // releases the Foundry canvas margin, and survives hard page reload.
   await controlsPage.evaluate(() => {
@@ -710,6 +737,10 @@ try {
   assert.equal(await controlsPage.locator("body").evaluate(el =>
     el.classList.contains("rpgup-vdo-docked")), false,
     "Collapsed side dock must release the main Foundry interface space");
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#ddu-party")?.getBoundingClientRect().left < 4);
+  assert.equal(await controlsPage.locator("#ddu-party").evaluate(el => el.style.translate), "",
+    "Collapsing VDO restores DAS's original position instead of leaving the portraits suspended");
 
   await controlsPage.reload();
   await controlsPage.waitForFunction(() => globalThis.fixtureReady &&
@@ -735,6 +766,11 @@ try {
   assert.equal(await controlsPage.locator("body").evaluate(el =>
     el.classList.contains("rpgup-vdo-docked")), true,
     "Expanded dock restores original Foundry canvas margin");
+  // DAS may render after the Foundry refresh; reattach the public party
+  // fixture without changing its own positioning logic.
+  await controlsPage.waitForFunction(() => !document.querySelector("#ddu-party") ||
+    document.querySelector("#ddu-party").getBoundingClientRect().left >=
+    document.querySelector("#rpgup-vdo-room").getBoundingClientRect().right + 5);
   await controlsPage.reload();
   await controlsPage.waitForFunction(() => globalThis.fixtureReady &&
     document.querySelector("#rpgup-vdo-room iframe"));

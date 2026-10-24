@@ -4,6 +4,7 @@ import { prepareAvatar } from "./avatar.js";
 import { worldConfig, userPrefs, savePrefs } from "./settings.js";
 import { element, tooltip, report } from "./dom.js";
 import { WorldConfig } from "./world-config.js";
+import { syncDASParty, clearDASParty } from "./das-compat.js";
 
 const ApplicationV2 = foundry.applications.api.ApplicationV2;
 
@@ -261,6 +262,16 @@ export class RoomDock extends ApplicationV2 {
       const amount = docked && this.prefs.dock === side ? (["left", "right"].includes(side) ? position.width : position.height) : 0;
       document.body.style.setProperty(`--rpgup-vdo-${side}`, `${amount}px`);
     }
+    // DAS Party is fixed inside #interface and does not observe margin changes.
+    // Measure after layout, then move it only if the VDO rectangle overlaps.
+    cancelAnimationFrame(this._dasPlacementFrame);
+    this._dasPlacementFrame = requestAnimationFrame(() => {
+      this._dasPlacementFrame = null;
+      syncDASParty(this.element, {
+        collapsed: this.prefs.collapsed || !docked,
+        side: this.prefs.dock
+      });
+    });
   }
 
   _scheduleSave() {
@@ -286,8 +297,11 @@ export class RoomDock extends ApplicationV2 {
     this._connecting = false;
     this._observer?.disconnect();
     this._observer = null;
+    cancelAnimationFrame(this._dasPlacementFrame);
+    this._dasPlacementFrame = null;
     document.body.classList.remove("rpgup-vdo-docked");
     for (const side of ["left", "right", "top", "bottom"]) document.body.style.removeProperty(`--rpgup-vdo-${side}`);
+    clearDASParty();
     // Removing the iframe closes its session/capture; reopening creates only one frame.
     this._iframe?.remove();
     this._iframe = this._root = this._status = this._resizeListener = null;
