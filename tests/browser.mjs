@@ -650,6 +650,7 @@ try {
     Hooks.callAll("getSceneControlButtons", sceneControlSpec);
     return {
       vdo: sceneControlSpec.tokens.tools["rpgup-vdo-options"],
+      collapse: sceneControlSpec.tokens.tools["rpgup-vdo-collapse"],
       toolCount: Object.keys(sceneControlSpec.tokens.tools).length,
       drawingsUnchanged: Object.keys(sceneControlSpec.drawings.tools).length
     };
@@ -657,7 +658,10 @@ try {
   assert.equal(toolMetadata.vdo.name, "rpgup-vdo-options");
   assert.equal(toolMetadata.vdo.button, true);
   assert.equal(toolMetadata.vdo.visible, true);
-  assert.equal(toolMetadata.toolCount, 2);
+  assert.equal(toolMetadata.toolCount, 3);
+  assert.equal(toolMetadata.collapse.name, "rpgup-vdo-collapse");
+  assert.equal(toolMetadata.collapse.button, true);
+  assert.equal(toolMetadata.collapse.visible, true);
   assert.equal(toolMetadata.drawingsUnchanged, 0);
   assert.equal(await controlsPage.locator(".rpgup-hud-tab, .rpgup-sidebar-pane").count(), 0,
     "Never attach an unauthorized tab or pane to Foundry's right sidebar");
@@ -687,6 +691,58 @@ try {
   assert.match(await controlsPage.locator(".rpgup-global-reconnect-status").innerText(), /Reconexão|Aplicando/i);
   await controlsPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   await controlsPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-world-config"));
+  // End-to-end persistence: collapse does not destroy/reload VDO iframe,
+  // releases the Foundry canvas margin, and survives hard page reload.
+  await controlsPage.evaluate(() => {
+    globalThis.vdoFrameBeforeCollapse = document.querySelector("#rpgup-vdo-room iframe");
+    globalThis.vdoSourceBeforeCollapse = vdoFrameBeforeCollapse.src;
+    sceneControlSpec.tokens.tools["rpgup-vdo-collapse"].onChange();
+  });
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
+    game.user.getFlag("rpgup-vdo-ninja", "preferences")?.collapsed === true);
+  assert.equal(await controlsPage.evaluate(() =>
+    document.querySelector("#rpgup-vdo-room iframe") === vdoFrameBeforeCollapse &&
+    vdoFrameBeforeCollapse.src === vdoSourceBeforeCollapse), true,
+    "Collapse must preserve the SAME live VDO browsing context and stream URL");
+  assert.equal(await controlsPage.locator("#rpgup-vdo-room").evaluate(el =>
+    getComputedStyle(el).visibility), "hidden");
+  assert.equal(await controlsPage.locator("body").evaluate(el =>
+    el.classList.contains("rpgup-vdo-docked")), false,
+    "Collapsed side dock must release the main Foundry interface space");
+
+  await controlsPage.reload();
+  await controlsPage.waitForFunction(() => globalThis.fixtureReady &&
+    document.querySelector("#rpgup-vdo-room.rpgup-dock-collapsed iframe"));
+  assert.equal(await controlsPage.evaluate(() => game.user.getFlag("rpgup-vdo-ninja", "preferences").collapsed), true,
+    "Collapse must persist across browser refresh");
+  assert.equal(await controlsPage.locator("body").evaluate(el =>
+    el.classList.contains("rpgup-vdo-docked")), false);
+  await controlsPage.evaluate(() => {
+    globalThis.sceneControlSpec = { tokens: { tools: {} } };
+    Hooks.callAll("getSceneControlButtons", sceneControlSpec);
+    globalThis.vdoFrameBeforeExpand = document.querySelector("#rpgup-vdo-room iframe");
+    sceneControlSpec.tokens.tools["rpgup-vdo-collapse"].onChange();
+  });
+  await controlsPage.waitForFunction(() =>
+    !document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
+    game.user.getFlag("rpgup-vdo-ninja", "preferences")?.collapsed === false);
+  assert.equal(await controlsPage.evaluate(() =>
+    document.querySelector("#rpgup-vdo-room iframe") === vdoFrameBeforeExpand), true,
+    "Expand cannot reload the current VDO iframe");
+  assert.equal(await controlsPage.locator("#rpgup-vdo-room").evaluate(el =>
+    getComputedStyle(el).visibility), "visible");
+  assert.equal(await controlsPage.locator("body").evaluate(el =>
+    el.classList.contains("rpgup-vdo-docked")), true,
+    "Expanded dock restores original Foundry canvas margin");
+  await controlsPage.reload();
+  await controlsPage.waitForFunction(() => globalThis.fixtureReady &&
+    document.querySelector("#rpgup-vdo-room iframe"));
+  assert.equal(await controlsPage.locator("#rpgup-vdo-room").evaluate(el =>
+    el.classList.contains("rpgup-dock-collapsed")), false,
+    "Expanded state must also persist across browser refresh");
+  assert.equal(await controlsPage.locator("body").evaluate(el =>
+    el.classList.contains("rpgup-vdo-docked")), true);
   assert.deepEqual(controlsErrors, []);
   await controlsContext.close();
   console.log("Official left Scene Control and native settings window: OK.");

@@ -200,11 +200,22 @@ export class RoomDock extends ApplicationV2 {
     if (this._settingsButton) tooltip(this._settingsButton, this._status.textContent);
   }
 
+  // Collapsing hides the dock and releases Foundry's reserved canvas space,
+  // but keeps the existing VDO iframe and WebRTC session alive on this page.
+  // The preference is stored per Foundry user and restored after refresh.
+  async setCollapsed(collapsed) {
+    this.prefs = normalizePrefs({ ...this.prefs, collapsed: Boolean(collapsed) });
+    if (this.rendered) this._layout();
+    await this._persist();
+    return this.prefs.collapsed;
+  }
+
   _layout() {
     if (!this.element) return;
     this._layingOut = true;
     try {
       this.element.dataset.dock = this.prefs.dock;
+      this.element.classList.toggle("rpgup-dock-collapsed", this.prefs.collapsed);
       const position = dockPosition(this.prefs, { width: window.innerWidth, height: window.innerHeight });
       this.setPosition(position);
       this._reserveInterface(position);
@@ -244,7 +255,7 @@ export class RoomDock extends ApplicationV2 {
   _reserveInterface(position) {
     // Scoped CSS reserves the main interface's margins, like the native AV dock.
     // Do not move Foundry nodes or replace CameraViews/AVClient.
-    const docked = this.prefs.dock !== "floating";
+    const docked = this.prefs.dock !== "floating" && !this.prefs.collapsed;
     document.body.classList.toggle("rpgup-vdo-docked", docked);
     for (const side of ["left", "right", "top", "bottom"]) {
       const amount = docked && this.prefs.dock === side ? (["left", "right"].includes(side) ? position.width : position.height) : 0;

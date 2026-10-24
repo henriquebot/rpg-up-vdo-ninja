@@ -124,6 +124,11 @@ test("preferências e geometria são normalizadas sem escapar da viewport", () =
   assert.equal(normalizePrefs({ dock: "invalid", preview: "network", sideWidth: NaN }).dock, "left");
   assert.equal(normalizePrefs({}).dock, "left");
   assert.equal(normalizePrefs({}).schemaVersion, 4);
+  assert.equal(normalizePrefs({}).collapsed, false, "Old installations begin with the dock visible");
+  assert.equal(normalizePrefs({ collapsed: true }).collapsed, true);
+  assert.equal(normalizePrefs({ schemaVersion: 3, collapsed: true }).collapsed, true);
+  assert.equal(normalizePrefs({ collapsed: "true" }).collapsed, false,
+    "Collapse is a strict per-user boolean, not a truthy string");
   for (const dock of ["left", "right", "top", "bottom", "floating"]) {
     for (const [width, height] of [[1920, 1080], [360, 640], [250, 200]]) {
       const pos = dockPosition({ dock, floating: { width: 2400, height: 1800, left: 9999, top: 9999 } }, { width, height });
