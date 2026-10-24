@@ -18,7 +18,10 @@ export function createPersonalTabs() {
   });
 
   function update(changes, { layout = false, zoom = false, reconnect = false } = {}) {
-    prefs = normalizePrefs({ ...prefs, ...changes });
+    // An already-open settings window must never overwrite the independent
+    // left toolbar's newer collapsed flag with its stale local snapshot.
+    const collapsed = currentDock()?.prefs.collapsed ?? userPrefs().collapsed;
+    prefs = normalizePrefs({ ...prefs, collapsed, ...changes });
     const snapshot = structuredClone(prefs);
     const dock = currentDock();
     if (dock?.rendered) {
