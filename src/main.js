@@ -27,6 +27,22 @@ export async function toggleDock() {
   return openDock();
 }
 
+// Scene Control action: on an open dock this only changes visibility and
+// available canvas space; it does not close/reload the VDO iframe.
+export async function toggleDockCollapsed() {
+  const dock = new RoomDock();
+  if (!dock.rendered || !dock.element?.isConnected) {
+    // The user may have disabled auto-open or closed the application.
+    // The same left control then restores a visible dock in one click.
+    dock.prefs = userPrefs();
+    dock.prefs.collapsed = false;
+    await dock.setCollapsed(false);
+    await openDock();
+    return false;
+  }
+  return dock.setCollapsed(!dock.prefs.collapsed);
+}
+
 export async function toggleOptions() {
   const panel = new WorldConfig();
   if (panel.rendered && panel.element?.isConnected) {
@@ -51,7 +67,7 @@ Hooks.once("init", () => {
     WorldConfig.instance?.configChanged();
     RoomDock.instance?.configChanged();
   });
-  game.modules.get(MODULE_ID).api = Object.freeze({ openDock, toggleDock, toggleOptions, openHudSidebar: toggleOptions, dock: () => RoomDock.instance });
+  game.modules.get(MODULE_ID).api = Object.freeze({ openDock, toggleDock, toggleOptions, toggleDockCollapsed, openHudSidebar: toggleOptions, dock: () => RoomDock.instance });
 });
 
 // Official Foundry v13/v14 Scene Controls API: one button in the left
@@ -67,6 +83,15 @@ Hooks.on("getSceneControlButtons", controls => {
     button: true,
     visible: true,
     onChange: () => void toggleOptions().catch(report)
+  };
+  token.tools["rpgup-vdo-collapse"] = {
+    name: "rpgup-vdo-collapse",
+    title: "Recolher / mostrar dock VDO.Ninja",
+    icon: "fa-solid fa-compress",
+    order: Object.keys(token.tools).length,
+    button: true,
+    visible: true,
+    onChange: () => void toggleDockCollapsed().catch(report)
   };
 });
 
