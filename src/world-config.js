@@ -283,7 +283,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
         const completeCopy = button("Completo", "fa-copy", { "aria-label": `Copiar link completo de entrada de ${user.name}` });
         joinCopy.disabled = true;
         completeCopy.disabled = true;
-        tooltip(joinCopy, "Link compacto com sala, Stream ID, senha, nome e áudio. Sem avatar e CSS de bordas embutidos.");
+        tooltip(joinCopy, "Link de entrada menor, mantendo sala, Stream ID, áudio, bordas e layout. Sem o avatar incorporado.");
         tooltip(completeCopy, "Link original com avatar, layout e estilos personalizados. Pode conter milhares de caracteres.");
         joinField.append(joinLink, joinCopy, completeCopy);
         joinCell.append(joinField);
@@ -296,7 +296,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
           if (linksAbort.signal.aborted) return;
           joinLink.value = shortURL;
           joinCopy.disabled = false;
-          tooltip(joinLink, "Link curto para este jogador. Mantém sala, identidade, senha e áudio; usa visual VDO original, sem avatar e CSS embutidos.");
+          tooltip(joinLink, "Link curto para este jogador. Preserva a sala, as bordas e o layout personalizado; omite apenas o avatar para ficar menor.");
           joinCopy.addEventListener("click", async () => {
             try {
               await navigator.clipboard.writeText(shortURL);

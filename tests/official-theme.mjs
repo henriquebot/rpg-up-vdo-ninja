@@ -21,6 +21,7 @@ try {
   target.searchParams.set("audiodevice", "0");
   target.searchParams.set("noaudio", "");
   target.searchParams.set("meterstyle", "2");
+  target.searchParams.set("css", styleSheetURL("scifi", "native"));
   target.searchParams.set("base64css", encodeThemeCSS(theme));
   assert.ok(target.href.length <= 6900, "Real VDO URL must not risk nginx 414");
   const response = await page.goto(target.href, { waitUntil: "domcontentloaded", timeout: 40000 });

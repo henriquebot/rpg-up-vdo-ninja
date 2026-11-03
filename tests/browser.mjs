@@ -304,8 +304,8 @@ try {
   assert.equal(browserJoin.searchParams.get("password"), "Fixture123");
   assert.equal(browserJoin.searchParams.has("view"), false, "Link de jogador publica, não é viewer OBS");
   assert.equal(browserJoin.searchParams.has("avatar"), false, "Link curto não incorpora avatar grande");
-  assert.equal(browserJoin.searchParams.has("base64css"), false, "Link curto não incorpora estilo CSS codificado");
-  assert.ok(browserJoin.href.length < 500, "Link curto deve caber numa mensagem comum");
+  assert.equal(browserJoin.searchParams.has("base64css"), true, "Link curto conserva as bordas");
+  assert.ok(browserJoin.href.length < 1800, "Link curto continua compacto");
   assert.equal(await page.getByRole("button", { name: "Copiar link curto de entrada de Jogador A" }).isEnabled(), true);
   await page.getByRole("button", { name: "Copiar link completo de entrada de Jogador A" }).waitFor({ state: "visible" });
   await worldTab(page, "general");
@@ -349,8 +349,8 @@ try {
   assert.equal(updatedJoin.searchParams.get("lowcut"), "100");
   assert.ok(updatedJoin.href.length <= 6900);
   assert.equal(updatedJoin.searchParams.has("avatar"), false, "Entrada curta mantém o avatar opcional fora da URL");
-  assert.equal(updatedJoin.searchParams.has("base64css"), false);
-  assert.ok(updatedJoin.href.length < 500);
+  assert.equal(updatedJoin.searchParams.has("base64css"), true);
+  assert.ok(updatedJoin.href.length < 1800);
   await page.waitForFunction(() => {
     const btn = document.querySelector('[aria-label="Copiar link completo de entrada de Jogador A"]');
     return btn && !btn.disabled;
@@ -398,7 +398,7 @@ try {
   assert.equal(director.searchParams.get("echocancellation"), "1");
   assert.equal(director.searchParams.get("autogain"), "1");
   assert.equal(director.searchParams.get("noisegate"), "1");
-  assert.ok(decodeURIComponent(atob(director.searchParams.get("base64css"))).includes("outline:"));
+  assert.ok(decodeURIComponent(atob(director.searchParams.get("base64css"))).includes("--rpgup-outline:"));
   assert.ok(director.href.length <= 6900);
   assert.equal(director.searchParams.has("structure"), false);
   await page.evaluate(() => { globalThis.layoutFrame = document.querySelector("iframe"); });
