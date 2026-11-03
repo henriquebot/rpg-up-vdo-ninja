@@ -1,6 +1,6 @@
 import { MODULE_ID, fillMissingSlots, validateWorld, normalizePrefs, suggestRoomId, QUALITY_PRESETS, ROOM_LAYOUTS, CAMERA_THEMES, AUDIO_FILTER_PRESETS, audioFilterPreset, validateAudioFilters } from "./config.js";
 import { worldConfig, saveWorld } from "./settings.js";
-import { participantURL, soloURL, obsExport, avatarURLBudget } from "./urls.js";
+import { participantURL, compactParticipantURL, soloURL, obsExport, avatarURLBudget } from "./urls.js";
 import { prepareAvatar } from "./avatar.js";
 import { themeVisual, foundryUserColor, THEME_STYLES } from "./theme.js";
 import { createVDOOptionsEditor } from "./advanced-options.js";
