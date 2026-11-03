@@ -73,7 +73,7 @@ test("link curto de entrada preserva identidade, sala, senha e áudio sem CSS ou
       assert.equal(short.searchParams.get(key), complete.searchParams.get(key), key);
     }
     assert.equal(short.searchParams.has("base64css"), true, "Link curto conserva cores das bordas");
-    assert.match(short.searchParams.get("css"), /vdo-style-adaptive\\.css/);
+    assert.match(short.searchParams.get("css"), /vdo-style-adaptive\.css/);
     assert.equal(short.searchParams.has("avatar"), false);
     assert.equal(short.searchParams.has("view"), false, "Short publisher link cannot become an OBS viewer");
     assert.ok(short.href.length < 1800, `URL curta deve continuar compacta: ${short.href.length}`);

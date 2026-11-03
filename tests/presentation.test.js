@@ -28,7 +28,7 @@ test("original é padrão por jogador, sempre reversível", () => {
 test("cabeçalho compacto carrega CSS externo sem apagar controles", async () => {
   const native = new URL(participantURL(world, gm, { schemaVersion: 4, avatar: "none", presentation: "native" }, [gm]));
   const minimal = new URL(participantURL(world, gm, { avatar: "none", presentation: "minimal" }, [gm]));
-  assert.match(minimal.searchParams.get("css"), /vdo-style-minimal\\.css/);
+  assert.match(minimal.searchParams.get("css"), /vdo-style-minimal\.css/);
   assert.notEqual(minimal.searchParams.get("css"), native.searchParams.get("css"));
   const css = await readFile(new URL("../styles/vdo-style-minimal.css", import.meta.url), "utf8");
   assert.match(css, /#logoname/);
@@ -79,5 +79,5 @@ test("URLs lotadas não perdem identidade nem ultrapassam orçamento", () => {
   const url = participantURL(crowded, gm, { avatar: "none", presentation: "adaptive" }, [gm, ...extras]);
   assert.ok(url.length <= 6900);
   assert.equal(new URL(url).searchParams.get("push"), "slot_master");
-  assert.match(new URL(url).searchParams.get("css"), /vdo-style-adaptive\\.css/, "Layout permanece em CSS externo");
+  assert.match(new URL(url).searchParams.get("css"), /vdo-style-adaptive\.css/, "Layout permanece em CSS externo");
 });
