@@ -1,6 +1,5 @@
 import { VDO_BASE, QUALITY_PRESETS, parseExtraQuery, validateWorld, normalizePrefs } from "./config.js";
-import { themeCSS, encodeThemeCSS } from "./theme.js";
-import { presentationCSS } from "./presentation.js";
+import { themeCSS, encodeThemeCSS, styleSheetURL } from "./theme.js";
 
 // Nginx commonly rejects request-lines above ~8 KB. Leave room for URL
 // encoding, proxies, and future VDO parameters: NEVER navigate a longer URL.
@@ -58,10 +57,10 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
   // Load the optional styling with the document, before a guest joins the
   // room. postMessage after iframe.onload was too late/unreliable in actual
   // sessions. Keep styling local to this user's link; never alter OBS exports.
-  const extraPresentation = presentationCSS(prefs.presentation, { director: isDirector });
+  const sheet = styleSheetURL(config.theme, prefs.presentation, { director: isDirector });
+  if (sheet) url.searchParams.set("css", sheet);
   const css = themeCSS(config, users);
-  const assembledCSS = [css, extraPresentation].filter(Boolean).join("");
-  if (assembledCSS) url.searchParams.set("base64css", encodeThemeCSS(assembledCSS));
+  if (css) url.searchParams.set("base64css", encodeThemeCSS(css));
   if (config.theme !== "none" && config.audio === "vdo") {
     // Official native speaker outline: meterstyle=4 only sets a data attribute
     // and was invisible in real calls. 2 draws the VDO audio activity border.
@@ -91,9 +90,8 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
     url.searchParams.set("audiodevice", "0");
     url.searchParams.set("noaudio", "");
   }
-  // Keep at least 2.5 KB available for the avatar. With many users,
-  // prioritize the selected layout over per-user border colors, then fall
-  // back to only the minimalist header if the safe request-line budget shrinks.
+  // Keep room for the avatar. If needed, omit optional border variables
+  // while retaining the external presentation stylesheet and the room identity.
   if (url.searchParams.has("base64css")) {
     const urlWithoutAvatar = () => {
       const baseline = new URL(url);
@@ -101,14 +99,9 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
       return baseline.href.length;
     };
     if (urlWithoutAvatar() > MAX_VDO_URL_LENGTH - 2500) {
-      if (extraPresentation) url.searchParams.set("base64css", encodeThemeCSS(extraPresentation));
-      else url.searchParams.delete("base64css");
+      url.searchParams.delete("base64css");
       url.searchParams.delete("meterstyle");
     }
-    if (extraPresentation && urlWithoutAvatar() > MAX_VDO_URL_LENGTH - 2500) {
-      url.searchParams.set("base64css", encodeThemeCSS(presentationCSS("minimal")));
-    }
-    if (urlWithoutAvatar() > MAX_VDO_URL_LENGTH - 2500) url.searchParams.delete("base64css");
   }
   // Avatar gets resized before this step in the dock, but direct callers
   // may supply oversized images. Prefer preserving optional presentation.
@@ -127,13 +120,10 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
   return url.href;
 }
 
-// A direct, reusable external link without inline per-user graphics. Retain
-// the exact same room, publisher Stream ID, label, password, quality and audio
-// filters as the complete link; omit only optional self-contained appearance.
-// Never change the Foundry iframe URL or OBS links.
+// Short link preserves visual styles; only potentially huge avatar data is omitted.
+// The Foundry iframe and OBS viewer links remain independent.
 export function compactParticipantURL(world, user, prefs = {}, users = [user], baseURL = globalThis.location?.href) {
   const url = new URL(participantURL(world, user, prefs, users, baseURL, null));
-  url.searchParams.delete("base64css");
   url.searchParams.delete("avatar");
   return url.href;
 }
@@ -143,7 +133,7 @@ export function compactParticipantURL(world, user, prefs = {}, users = [user], b
 // use the SAME budget so a GM cannot copy a link that would trigger nginx 414.
 export function avatarURLBudget(world, user, prefs = {}, users = [user], baseURL = globalThis.location?.href) {
   const baseline = participantURL(world, user, prefs, users, baseURL, null);
-  return Math.max(0, Math.min(5800, MAX_VDO_URL_LENGTH - baseline.length - "&avatar=".length - 150));
+  return Math.max(0, MAX_VDO_URL_LENGTH - baseline.length - "&avatar=".length - 150);
 }
 
 // General guest invitation: never reuse a Foundry user's publisher Stream ID.

@@ -72,10 +72,11 @@ test("link curto de entrada preserva identidade, sala, senha e áudio sem CSS ou
       "audiodevice", "denoise", "echocancellation", "autogain", "noisegate", "compressor", "lowcut"]) {
       assert.equal(short.searchParams.get(key), complete.searchParams.get(key), key);
     }
-    assert.equal(short.searchParams.has("base64css"), false);
+    assert.equal(short.searchParams.has("base64css"), true, "Link curto conserva cores das bordas");
+    assert.match(short.searchParams.get("css"), /vdo-style-adaptive\\.css/);
     assert.equal(short.searchParams.has("avatar"), false);
     assert.equal(short.searchParams.has("view"), false, "Short publisher link cannot become an OBS viewer");
-    assert.ok(short.href.length < 500, `URL curta deveria ter algumas centenas de caracteres: ${short.href.length}`);
+    assert.ok(short.href.length < 1800, `URL curta deve continuar compacta: ${short.href.length}`);
     assert.ok(complete.href.length > short.href.length);
   }
 });
@@ -251,7 +252,7 @@ test("temas usam cores Foundry e o destaque de fala nativo do VDO", () => {
   const encoded = url.searchParams.get("base64css");
   const restored = decodeURIComponent(atob(encoded));
   assert.doesNotMatch(restored, /data-speaking/);
-  assert.match(restored, /outline:/);
+  assert.match(restored, /--rpgup-outline:/);
   assert.match(restored, /--c:#12aB78/);
   assert.equal(url.searchParams.get("showlabels"), "rounded");
   assert.equal(foundryUserColor({ color: "#abc" }), "#aabbcc");

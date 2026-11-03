@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { themeCSS, encodeThemeCSS } from "../src/theme.js";
+import { themeCSS, encodeThemeCSS, styleSheetURL } from "../src/theme.js";
 import { presentationCSS } from "../src/presentation.js";
 
 const { chromium } = await import("playwright");
@@ -84,6 +84,35 @@ try {
   });
   assert.equal(accepted, true, "Official VDO.Ninja iframe must accept its documented style postMessage command");
   await host.close();
+  // Probe real VDO loading static CSS and inline theme variables together.
+  const external = await context.newPage();
+  const cssURL = new URL("https://vdo.ninja/");
+  cssURL.searchParams.set("room", "RPGUPStylesheetSmoke");
+  cssURL.searchParams.set("scene", "");
+  cssURL.searchParams.set("fakeguests", "1");
+  cssURL.searchParams.set("videodevice", "0");
+  cssURL.searchParams.set("noaudio", "");
+  cssURL.searchParams.set("css", styleSheetURL("scifi", "minimal"));
+  cssURL.searchParams.set("base64css", encodeThemeCSS(theme));
+  const extResponse = await external.goto(cssURL.href, { waitUntil: "domcontentloaded", timeout: 40000 });
+  assert.equal(extResponse?.status(), 200);
+  await external.locator("#gridlayout").waitFor({ state: "attached" });
+  const applied = await external.evaluate(async () => {
+    const tile = document.createElement("video");
+    tile.className = "tile";
+    tile.id = "slot_test";
+    document.body.appendChild(tile);
+    try {
+      for (let i = 0; i < 40; i++) {
+        const style = getComputedStyle(tile);
+        if (style.outlineStyle === "solid" && style.outlineColor === "rgb(170, 187, 221)") return true;
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+      return false;
+    } finally { tile.remove(); }
+  });
+  assert.equal(applied, true, "External CSS and inline variables must both apply");
+  await external.close();
   // Regression from a live user screenshot: selecting adaptive must hide the
   // branding and pack video tiles in the *real upstream VDO document*.
   // Synthetic DOM tiles exercise layout; they are NOT claimed as real WebRTC

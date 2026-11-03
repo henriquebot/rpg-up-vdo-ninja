@@ -37,10 +37,9 @@ export function themeCSS(world, users = []) {
   if (!Object.hasOwn(CAMERA_THEMES, theme)) throw new Error("Tema visual inválido.");
   if (theme === "none") return "";
   const s = THEME_STYLES[theme];
+  // External CSS owns the rules; only theme variables and user colors go into the URL.
   const css = [
-    // Outline leaves the VDO's own audio-meter border independent.
-    `.tile{--c:#a5a5b2;outline:${s.width}px solid var(--c)!important;outline-offset:-${s.width}px;border-radius:${s.radius}px!important;box-shadow:${s.glow}!important;background:${s.background}!important}`,
-    `.tile .video-label{background:${s.label}!important;border-radius:4px!important}`
+    `.tile{--rpgup-outline:${s.width}px solid var(--c);--rpgup-offset:-${s.width}px;--rpgup-radius:${s.radius}px;--rpgup-shadow:${s.glow};--rpgup-bg:${s.background};--rpgup-label:${s.label};--rpgup-label-radius:4px}`
   ];
   for (const user of users) {
     const id = world?.slots?.[user.id];
@@ -55,4 +54,15 @@ export function themeCSS(world, users = []) {
 export function encodeThemeCSS(css) {
   if (!css) return "";
   return btoa(encodeURIComponent(css));
+}
+
+
+// Public, cache-busted CSS files. No credentials or user data are sent to CDN.
+const STYLE_BASE = "https://cdn.jsdelivr.net/gh/henriquebot/rpg-up-vdo-ninja@main/styles/";
+export function styleSheetURL(theme, presentation, { director = false } = {}) {
+  if (!Object.hasOwn(CAMERA_THEMES, theme)) throw new Error("Tema visual inválido.");
+  const mode = director ? "native" : presentation;
+  if (!["native", "minimal", "adaptive"].includes(mode)) throw new Error("Apresentação da dock inválida.");
+  if (theme === "none" && mode === "native") return "";
+  return STYLE_BASE + "vdo-style-" + mode + ".css?v=1.0.25";
 }
