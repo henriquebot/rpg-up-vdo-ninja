@@ -12,6 +12,12 @@ try {
   const context = await browser.newContext({ viewport: { width: 900, height: 600 } });
   await context.routeWebSocket(/.*/, ws => ws.close());
   const page = await context.newPage();
+  page.on("response", response => {
+    if (response.url().includes("jsdelivr")) console.log("CSS CDN HTTP", response.status(), response.headers()["content-type"], response.url());
+  });
+  page.on("requestfailed", request => {
+    if (request.url().includes("jsdelivr")) console.log("CSS CDN request failed:", request.failure()?.errorText);
+  });
   const theme = themeCSS({ theme: "scifi", slots: { probe: "slot_test" } }, [{ id: "probe", color: "#aabbdd" }]);
   const target = new URL("https://vdo.ninja/");
   target.searchParams.set("room", "RPGUPVisualSmoke");
@@ -28,26 +34,33 @@ try {
   assert.equal(response?.status(), 200);
   await page.waitForFunction(() => globalThis.session?.fakeFeeds?.length === 2 &&
     session.fakeFeeds.every(video => video.videoWidth > 0), undefined, { timeout: 45000 });
-  const result = await page.evaluate(() => {
-    // Fake guests are detached test feeds; they are not actual peers.
+  const result = await page.evaluate(async () => {
+    // Wait for asynchronous external CSS loading before inspecting a tile.
     const tile = document.createElement("video");
     tile.className = "tile";
     tile.dataset.streamid = "slot_test";
     tile.style.width = "320px";
     tile.style.height = "180px";
     document.body.append(tile);
-    const styles = getComputedStyle(tile);
-    const data = {
-      version: session.version,
-      meterStyle: session.meterStyle,
-      shadow: styles.boxShadow,
-      outline: styles.outlineStyle,
-      outlineColor: styles.outlineColor,
-      appliedColor: styles.getPropertyValue("--c").trim()
-    };
-    tile.remove();
-    return data;
+    try {
+      for (let i = 0; i < 100; i++) {
+        const styles = getComputedStyle(tile);
+        if (styles.boxShadow !== "none") return {
+          version: session.version,
+          meterStyle: session.meterStyle,
+          shadow: styles.boxShadow,
+          outline: styles.outlineStyle,
+          outlineColor: styles.outlineColor,
+          appliedColor: styles.getPropertyValue("--c").trim()
+        };
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+      const styles = getComputedStyle(tile);
+      return { meterStyle: session.meterStyle, shadow: styles.boxShadow,
+        outline: styles.outlineStyle, appliedColor: styles.getPropertyValue("--c").trim() };
+    } finally { tile.remove(); }
   });
+  console.log("External CSS computed result", JSON.stringify(result));
   assert.equal(String(result.meterStyle), "2", "Official VDO must recognize native speaker meter");
   assert.notEqual(result.shadow, "none", "Official VDO must apply Sci-fi glow CSS");
   assert.notEqual(result.outline, "none", "Official VDO must apply the camera outline");
