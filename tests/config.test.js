@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { fillMissingSlots, validateWorld, parseExtraQuery, normalizePrefs, dockPosition, suggestRoomId, validateAudioFilters, audioFilterPreset } from "../src/config.js";
-import { participantURL, soloURL, obsExport, roomInviteURL } from "../src/urls.js";
+import { participantURL, compactParticipantURL, soloURL, obsExport, roomInviteURL } from "../src/urls.js";
 import { themeCSS, foundryUserColor, themeVisual } from "../src/theme.js";
 import { VDO_OPTIONS } from "../src/advanced-options.js";
 
@@ -58,6 +58,26 @@ test("reconexões preservam slots e ignoram overrides antigos de câmera/interfa
     assert.equal(url.searchParams.has("autostart"), false);
   }
   assert.deepEqual(world, before);
+});
+
+test("link curto de entrada preserva identidade, sala, senha e áudio sem CSS ou avatar embutidos", () => {
+  const viewer = users[1];
+  const vdoAudio = { ...world, audio: "vdo", audioFilters: { preset: "voice", denoise: true, echoCancellation: true, autoGain: true, noiseGate: false, compressor: false, lowcutHz: 0 } };
+  for (const config of [world, vdoAudio]) {
+    const complete = new URL(participantURL(config, viewer, { presentation: "adaptive" }, users,
+      "https://foundry.example/game", "data:image/webp;base64,AA=="));
+    const short = new URL(compactParticipantURL(config, viewer, { presentation: "adaptive" }, users,
+      "https://foundry.example/game"));
+    for (const key of ["room", "push", "label", "password", "showlabels", "showheader",
+      "audiodevice", "denoise", "echocancellation", "autogain", "noisegate", "compressor", "lowcut"]) {
+      assert.equal(short.searchParams.get(key), complete.searchParams.get(key), key);
+    }
+    assert.equal(short.searchParams.has("base64css"), false);
+    assert.equal(short.searchParams.has("avatar"), false);
+    assert.equal(short.searchParams.has("view"), false, "Short publisher link cannot become an OBS viewer");
+    assert.ok(short.href.length < 500, `URL curta deveria ter algumas centenas de caracteres: ${short.href.length}`);
+    assert.ok(complete.href.length > short.href.length);
+  }
 });
 
 test("gerar slots preserva usuários existentes, removidos e evita colisões", () => {

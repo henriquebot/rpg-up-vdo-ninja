@@ -127,6 +127,17 @@ export function participantURL(world, user, prefs = {}, users = [user], baseURL 
   return url.href;
 }
 
+// A direct, reusable external link without inline per-user graphics. Retain
+// the exact same room, publisher Stream ID, label, password, quality and audio
+// filters as the complete link; omit only optional self-contained appearance.
+// Never change the Foundry iframe URL or OBS links.
+export function compactParticipantURL(world, user, prefs = {}, users = [user], baseURL = globalThis.location?.href) {
+  const url = new URL(participantURL(world, user, prefs, users, baseURL, null));
+  url.searchParams.delete("base64css");
+  url.searchParams.delete("avatar");
+  return url.href;
+}
+
 // Query-safe avatar budget for this specific world, including stream name,
 // audio, room parameters and actual theme CSS. Both embedded and external links
 // use the SAME budget so a GM cannot copy a link that would trigger nginx 414.
