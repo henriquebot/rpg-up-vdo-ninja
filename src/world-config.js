@@ -293,7 +293,7 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
           let prefs = normalizePrefs();
           try { prefs = normalizePrefs(user.getFlag?.(MODULE_ID, "preferences") ?? {}); } catch { /* Use defaults. */ }
           const shortURL = compactParticipantURL(savedConfig, user, prefs, users, location.href);
-          if (linksAbort.signal.aborted || this._form !== form) return;
+          if (linksAbort.signal.aborted) return;
           joinLink.value = shortURL;
           joinCopy.disabled = false;
           tooltip(joinLink, "Link curto para este jogador. Mantém sala, identidade, senha e áudio; usa visual VDO original, sem avatar e CSS embutidos.");
