@@ -279,15 +279,34 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
           placeholder: "Preparando link…"
         });
         joinLink.addEventListener("click", () => joinLink.select());
-        const joinCopy = button("Copiar", "fa-copy", { "aria-label": `Copiar link de entrada de ${user.name}` });
+        const joinCopy = button("Copiar curto", "fa-copy", { "aria-label": `Copiar link curto de entrada de ${user.name}` });
+        const completeCopy = button("Completo", "fa-copy", { "aria-label": `Copiar link completo de entrada de ${user.name}` });
         joinCopy.disabled = true;
-        joinField.append(joinLink, joinCopy);
+        completeCopy.disabled = true;
+        tooltip(joinCopy, "Link compacto com sala, Stream ID, senha, nome e áudio. Sem avatar e CSS de bordas embutidos.");
+        tooltip(completeCopy, "Link original com avatar, layout e estilos personalizados. Pode conter milhares de caracteres.");
+        joinField.append(joinLink, joinCopy, completeCopy);
         joinCell.append(joinField);
         pendingJoinLinks.push(async () => {
-          // Respect this user's placeholder preference, then the GM's table avatar,
-          // then the Foundry avatar. Embed a small raster so VDO works without Foundry login/CORS.
+          // Short link is immediately available. Only the optional full link
+          // needs to fetch and encode a potentially large Foundry avatar.
           let prefs = normalizePrefs();
-          try { prefs = normalizePrefs(user.getFlag?.(MODULE_ID, "preferences") ?? {}); } catch { /* User flags unavailable to GM: use Foundry/avatar defaults. */ }
+          try { prefs = normalizePrefs(user.getFlag?.(MODULE_ID, "preferences") ?? {}); } catch { /* Use defaults. */ }
+          const shortURL = compactParticipantURL(savedConfig, user, prefs, users, location.href);
+          if (linksAbort.signal.aborted || this._form !== form) return;
+          joinLink.value = shortURL;
+          joinCopy.disabled = false;
+          tooltip(joinLink, "Link curto para este jogador. Mantém sala, identidade, senha e áudio; usa visual VDO original, sem avatar e CSS embutidos.");
+          joinCopy.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(shortURL);
+              ui.notifications.info(`Link curto de ${user.name} copiado.`);
+            } catch {
+              joinLink.focus();
+              joinLink.select();
+              ui.notifications.warn("Clipboard indisponível. Use Ctrl+C no link selecionado.");
+            }
+          }, { signal: linksAbort.signal });
           let preparedAvatar = "default";
           let avatarError = "";
           try {
@@ -301,19 +320,19 @@ export class WorldConfig extends foundry.applications.api.ApplicationV2 {
             avatarError = error.message;
           }
           if (linksAbort.signal.aborted || this._form !== form) return;
-          const url = participantURL(savedConfig, user, prefs, users, location.href, preparedAvatar);
-          joinLink.value = url;
-          joinCopy.disabled = false;
-          tooltip(joinLink, "Entrada externa com nome, Stream ID e Room salvos. Compartilhe apenas com este jogador e feche a dock embutida para não publicar duas vezes.");
-          tooltip(joinCopy, "Copiar link de entrada externa. Contém o acesso à sala; envie somente ao jogador correspondente.");
-          joinCopy.addEventListener("click", async () => {
+          const fullURL = participantURL(savedConfig, user, prefs, users, location.href, preparedAvatar);
+          completeCopy.disabled = false;
+          completeCopy.addEventListener("click", async () => {
             try {
-              await navigator.clipboard.writeText(url);
-              ui.notifications.info(`Link de entrada de ${user.name} copiado.`);
+              await navigator.clipboard.writeText(fullURL);
+              ui.notifications.info(`Link completo de ${user.name} copiado.`);
             } catch {
+              const previous = joinLink.value;
+              joinLink.value = fullURL;
               joinLink.focus();
               joinLink.select();
               ui.notifications.warn("Clipboard indisponível. Use Ctrl+C no link selecionado.");
+              joinLink.addEventListener("blur", () => { joinLink.value = previous; }, { once: true });
             }
           }, { signal: linksAbort.signal });
           if (avatarError) {
