@@ -303,8 +303,11 @@ try {
   assert.equal(browserJoin.searchParams.get("label"), "Jogador A");
   assert.equal(browserJoin.searchParams.get("password"), "Fixture123");
   assert.equal(browserJoin.searchParams.has("view"), false, "Link de jogador publica, não é viewer OBS");
-  assert.equal(browserJoin.searchParams.get("avatar"), "default", "Jogador sem avatar usa placeholder padrão");
-  assert.equal(await page.getByRole("button", { name: "Copiar link de entrada de Jogador A" }).isEnabled(), true);
+  assert.equal(browserJoin.searchParams.has("avatar"), false, "Link curto não incorpora avatar grande");
+  assert.equal(browserJoin.searchParams.has("base64css"), false, "Link curto não incorpora estilo CSS codificado");
+  assert.ok(browserJoin.href.length < 500, "Link curto deve caber numa mensagem comum");
+  assert.equal(await page.getByRole("button", { name: "Copiar link curto de entrada de Jogador A" }).isEnabled(), true);
+  await page.getByRole("button", { name: "Copiar link completo de entrada de Jogador A" }).waitFor({ state: "visible" });
   await worldTab(page, "general");
   await page.getByRole("combobox", { name: "audio", exact: true }).selectOption("vdo");
   await worldTab(page, "audioFilters");
@@ -333,7 +336,9 @@ try {
   await worldTab(page, "participants");
   await page.waitForFunction(() => {
     const input = document.querySelector('input[aria-label="Link de entrada no navegador de Jogador A"]');
-    return input?.value && new URL(input.value).searchParams.get("avatar")?.startsWith("data:image/");
+    if (!input?.value) return false;
+    const url = new URL(input.value);
+    return url.searchParams.get("denoise") === "1" && url.searchParams.get("noisegate") === "1";
   });
   const updatedJoin = new URL(await page.getByRole("textbox", { name: "Link de entrada no navegador de Jogador A" }).inputValue());
   assert.equal(updatedJoin.searchParams.get("push"), "slot_a", "Link externo preserva Stream ID");
@@ -343,7 +348,15 @@ try {
   assert.equal(updatedJoin.searchParams.get("noisegate"), "1");
   assert.equal(updatedJoin.searchParams.get("lowcut"), "100");
   assert.ok(updatedJoin.href.length <= 6900);
-  assert.ok(updatedJoin.searchParams.get("avatar").startsWith("data:image/"), "Avatar Foundry da mesa incorporado funciona no navegador externo");
+  assert.equal(updatedJoin.searchParams.has("avatar"), false, "Entrada curta mantém o avatar opcional fora da URL");
+  assert.equal(updatedJoin.searchParams.has("base64css"), false);
+  assert.ok(updatedJoin.href.length < 500);
+  await page.waitForFunction(() => {
+    const btn = document.querySelector('[aria-label="Copiar link completo de entrada de Jogador A"]');
+    return btn && !btn.disabled;
+  });
+  assert.equal(await page.getByRole("button", { name: "Copiar link completo de entrada de Jogador A" }).isEnabled(), true,
+    "Entrada completa continua disponível com avatar e estilos personalizados");
   const obsDownload = page.waitForEvent("download");
   await page.getByRole("button", { name: "Exportar links OBS", exact: true }).click();
   const downloadedLinks = await obsDownload;
