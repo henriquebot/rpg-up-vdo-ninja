@@ -43,6 +43,21 @@ export async function toggleDockCollapsed() {
   return dock.setCollapsed(!dock.prefs.collapsed);
 }
 
+export async function showDock() {
+  const dock = RoomDock.instance;
+  if (dock?.rendered && dock.element?.isConnected) {
+    if (dock.prefs.collapsed) await dock.setCollapsed(false);
+    dock.bringToFront();
+    syncDockButton();
+    return dock;
+  }
+  const opened = await openDock();
+  if (opened.prefs.collapsed) await opened.setCollapsed(false);
+  opened.bringToFront();
+  syncDockButton();
+  return opened;
+}
+
 export async function toggleOptions() {
   const panel = new WorldConfig();
   if (panel.rendered && panel.element?.isConnected) {
@@ -70,15 +85,24 @@ Hooks.once("init", () => {
   game.modules.get(MODULE_ID).api = Object.freeze({ openDock, toggleDock, toggleOptions, toggleDockCollapsed, openHudSidebar: toggleOptions, dock: () => RoomDock.instance });
 });
 
-// Official Foundry v13/v14 Scene Controls API: one button in the left
-// Token tool palette, never a fake sidebar tab or floating overlay.
+// Official Foundry v13/v14 Scene Controls API: three native actions in the
+// left Token tool palette; no fake sidebar tab or floating overlay.
 Hooks.on("getSceneControlButtons", controls => {
   const token = controls?.tokens;
   if (!token?.tools) return;
+  token.tools["rpgup-vdo-cameras"] = {
+    name: "rpgup-vdo-cameras",
+    title: "Abrir câmeras VDO.Ninja",
+    icon: "fa-solid fa-video",
+    order: Object.keys(token.tools).length,
+    button: true,
+    visible: true,
+    onChange: () => void showDock().catch(report)
+  };
   token.tools["rpgup-vdo-options"] = {
     name: "rpgup-vdo-options",
     title: "Configurações RPGUP VDO.Ninja",
-    icon: "fa-solid fa-video",
+    icon: "fa-solid fa-gear",
     order: Object.keys(token.tools).length,
     button: true,
     visible: true,
@@ -86,7 +110,7 @@ Hooks.on("getSceneControlButtons", controls => {
   };
   token.tools["rpgup-vdo-collapse"] = {
     name: "rpgup-vdo-collapse",
-    title: "Recolher / mostrar dock VDO.Ninja",
+    title: "Recolher / restaurar dock VDO.Ninja",
     icon: "fa-solid fa-compress",
     order: Object.keys(token.tools).length,
     button: true,

@@ -36,20 +36,22 @@ async function openSettings(page) {
 }
 async function dockTab(page, key) {
   await openSettings(page);
-  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  const tab = page.locator(`#rpgup-vdo-world-config #rpgup-world-tab-${key}`);
   if (!await tab.isVisible()) {
     await page.getByRole("button", { name: "Minha câmera", exact: true }).click();
   }
   await tab.click();
+  assert.equal(await tab.getAttribute("aria-selected"), "true", `Personal tab ${key} should become selected`);
 }
 async function worldTab(page, key) {
   await openSettings(page);
-  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  const tab = page.locator(`#rpgup-vdo-world-config #rpgup-world-tab-${key}`);
   if (!await tab.isVisible()) {
     const group = ["general", "participants", "appearance"].includes(key) ? "Mesa" : "Avançado";
     await page.getByRole("button", { name: group, exact: true }).click();
   }
   await tab.click();
+  assert.equal(await tab.getAttribute("aria-selected"), "true", `World tab ${key} should become selected`);
 }
 try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
@@ -135,7 +137,8 @@ try {
     await page.getByRole("combobox", { name: "Posição do dock", exact: true }).selectOption(dock);
     const geometry = await page.locator("#rpgup-vdo-room").boundingBox();
     assert.ok(geometry.width >= 320 && geometry.height >= 240);
-    assert.ok(geometry.x >= 0 && geometry.y >= 0 && geometry.x + geometry.width <= 1440 && geometry.y + geometry.height <= 900);
+    assert.ok(geometry.x >= 0 && geometry.y >= 0 && geometry.x + geometry.width <= 1440 && geometry.y + geometry.height <= 900,
+      `Dock ${dock} escaped viewport: ${JSON.stringify(geometry)}`);
     const iface = await page.locator("#interface").boundingBox();
     if (dock === "left") {
       assert.equal(geometry.x, 0);
@@ -222,9 +225,10 @@ try {
     const visual = await page.evaluate(() => {
       const get = selector => getComputedStyle(document.querySelector(selector));
       const app = get("#rpgup-vdo-world-config");
-      const tab = get("#rpgup-world-tab-audioFilters");
+      const tabElement = document.querySelector("#rpgup-vdo-world-config #rpgup-world-tab-audioFilters");
+      const tab = getComputedStyle(tabElement);
       const nav = get("#rpgup-vdo-world-config .rpgup-tab-bar");
-      const select = get('select[name="audioFilterPreset"]');
+      const select = get('#rpgup-vdo-world-config select[name="audioFilterPreset"]');
       const footer = get("#rpgup-vdo-world-config .rpgup-config-footer");
       const help = get("#rpgup-world-pane-audioFilters .rpgup-help");
       const label = get("#rpgup-world-pane-audioFilters .rpgup-audio-filter-toggle > span");
@@ -236,6 +240,12 @@ try {
         });
       };
       const luminance = color => parse(color).reduce((sum, value, index) => sum + value * [.2126,.7152,.0722][index], 0);
+      const cssColor = value => {
+        const hex = value.trim().match(/^#([\da-f]{6})$/i);
+        if (!hex) return value;
+        const code = hex[1];
+        return `rgb(${parseInt(code.slice(0, 2), 16)}, ${parseInt(code.slice(2, 4), 16)}, ${parseInt(code.slice(4, 6), 16)})`;
+      };
       const contrast = (fg,bg) => {
         const a=luminance(fg), b=luminance(bg);
         return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
@@ -245,13 +255,16 @@ try {
         navBg: nav.backgroundColor, selectColor: select.color, selectBg: select.backgroundColor,
         selectScheme: select.colorScheme, footerBg: footer.backgroundColor, footerColor: footer.color,
         helpColor: help.color, labelColor: label.color,
-        contrastSelect: contrast(select.color, select.backgroundColor),
-        contrastTab: contrast(tab.color, tab.backgroundColor),
+        selectSurface: select.getPropertyValue("--rpgup-surface"),
+        tabSelected: tabElement.getAttribute("aria-selected"),
+        contrastSelect: contrast(select.color, cssColor(select.getPropertyValue("--rpgup-surface"))),
+        contrastTab: contrast(cssColor(tab.getPropertyValue("--rpgup-tab-selected-text")), cssColor(tab.getPropertyValue("--rpgup-tab-selected"))),
         contrastFooter: contrast(footer.color, footer.backgroundColor)
       };
     });
     assert.ok(visual.contrastSelect >= 4.5, `${mode}: dropdown text contrast, ${JSON.stringify(visual)}`);
-    assert.ok(visual.contrastTab >= 4.5, `${mode}: selected icon contrast, ${JSON.stringify(visual)}`);
+    assert.equal(visual.tabSelected, "true", `${mode}: expected the audio filters tab to remain selected`);
+    assert.ok(visual.contrastTab >= 4.5, `${mode}: selected icon theme tokens contrast, ${JSON.stringify(visual)}`);
     assert.ok(visual.contrastFooter >= 4.5, `${mode}: footer text contrast, ${JSON.stringify(visual)}`);
     assert.equal(visual.selectScheme, mode, `${mode}: native dropdown must match Foundry theme`);
     assert.equal(visual.navBg, visual.footerBg, `${mode}: tabs and footer share theme background`);
@@ -626,8 +639,26 @@ try {
   await page.screenshot({ path: path.join(screenshotDirectory, "unified-settings-mobile.png") });
   await page.evaluate(() => fixture.menu("worldConfig"));
   await page.screenshot({ path: path.join(screenshotDirectory, "world-obs-mobile.png") });
-  const panelOverflow = await page.locator(".rpgup-config-form").evaluate(form => form.scrollWidth > form.clientWidth + 2);
-  assert.equal(panelOverflow, false, "Painel GM fica legível em viewport estreita");
+  const panelOverflow = await page.locator(".rpgup-config-form").evaluate(form => ({
+    overflow: form.scrollWidth > form.clientWidth + 2,
+    scrollWidth: form.scrollWidth,
+    clientWidth: form.clientWidth,
+    formRect: form.getBoundingClientRect().toJSON(),
+    children: Array.from(form.children).map(el => ({
+      tag: el.tagName, className: el.className, id: el.id,
+      scrollWidth: el.scrollWidth, clientWidth: el.clientWidth,
+      rect: el.getBoundingClientRect().toJSON()
+    })),
+    overflowing: Array.from(form.querySelectorAll("*")).filter(el =>
+      el.scrollWidth > el.clientWidth + 2 &&
+      !["auto", "scroll", "hidden", "clip"].includes(getComputedStyle(el).overflowX)
+    ).slice(0, 15).map(el => ({
+      tag: el.tagName, className: el.className, id: el.id,
+      scrollWidth: el.scrollWidth, clientWidth: el.clientWidth,
+      rect: el.getBoundingClientRect().toJSON()
+    }))
+  }));
+  assert.equal(panelOverflow.overflow, false, `Painel GM fica legível em viewport estreita: ${JSON.stringify(panelOverflow)}`);
   await page.evaluate(() => fixture.closeConfig());
   await page.evaluate(async () => {
     game.world = { title: "Crônicas de Artraga" };
@@ -662,16 +693,22 @@ try {
     };
     Hooks.callAll("getSceneControlButtons", sceneControlSpec);
     return {
+      cameras: sceneControlSpec.tokens.tools["rpgup-vdo-cameras"],
       vdo: sceneControlSpec.tokens.tools["rpgup-vdo-options"],
       collapse: sceneControlSpec.tokens.tools["rpgup-vdo-collapse"],
       toolCount: Object.keys(sceneControlSpec.tokens.tools).length,
       drawingsUnchanged: Object.keys(sceneControlSpec.drawings.tools).length
     };
   });
+  assert.equal(toolMetadata.cameras.name, "rpgup-vdo-cameras");
+  assert.equal(toolMetadata.cameras.icon, "fa-solid fa-video");
+  assert.equal(toolMetadata.cameras.button, true);
+  assert.equal(toolMetadata.cameras.visible, true);
   assert.equal(toolMetadata.vdo.name, "rpgup-vdo-options");
+  assert.equal(toolMetadata.vdo.icon, "fa-solid fa-gear");
   assert.equal(toolMetadata.vdo.button, true);
   assert.equal(toolMetadata.vdo.visible, true);
-  assert.equal(toolMetadata.toolCount, 3);
+  assert.equal(toolMetadata.toolCount, 4);
   assert.equal(toolMetadata.collapse.name, "rpgup-vdo-collapse");
   assert.equal(toolMetadata.collapse.button, true);
   assert.equal(toolMetadata.collapse.visible, true);
@@ -704,6 +741,17 @@ try {
   assert.match(await controlsPage.locator(".rpgup-global-reconnect-status").innerText(), /Reconexão|Aplicando/i);
   await controlsPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   await controlsPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-world-config"));
+
+  // The camera icon opens a closed dock and never opens settings.
+  await controlsPage.evaluate(async () => {
+    await (await fixture.dock()).close();
+    sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange();
+  });
+  await controlsPage.waitForFunction(() => document.querySelector("#rpgup-vdo-room iframe"));
+  assert.equal(await controlsPage.locator("#rpgup-vdo-room iframe").count(), 1);
+  assert.equal(await controlsPage.locator("#rpgup-vdo-world-config").count(), 0);
+  console.log("Camera Scene Control opens the VDO dock: OK.");
+
   // DAS Combat UI's Party lives under #interface and is fixed-positioned.
   // Its own place() runs only on DAS resize/render, so VDO must explicitly
   // re-evaluate placement when the dock visibility changes.
@@ -750,6 +798,26 @@ try {
   assert.equal(await controlsPage.locator("body").evaluate(el =>
     el.classList.contains("rpgup-vdo-docked")), false,
     "Collapsed side dock must release the main Foundry interface space");
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#ddu-party")?.getBoundingClientRect().left < 4);
+
+  // The camera icon also restores a persisted collapsed dock without replacing
+  // the active iframe or losing the user's persistent preference state.
+  await controlsPage.evaluate(() => sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange());
+  await controlsPage.waitForFunction(() =>
+    !document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
+    game.user.getFlag("rpgup-vdo-ninja", "preferences")?.collapsed === false);
+  assert.equal(await controlsPage.evaluate(() =>
+    document.querySelector("#rpgup-vdo-room iframe") === vdoFrameBeforeCollapse &&
+    vdoFrameBeforeCollapse.src === vdoSourceBeforeCollapse), true,
+    "Camera control restores the same live VDO browsing context");
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#ddu-party")?.getBoundingClientRect().left >=
+    document.querySelector("#rpgup-vdo-room").getBoundingClientRect().right + 5);
+  await controlsPage.evaluate(() => sceneControlSpec.tokens.tools["rpgup-vdo-collapse"].onChange());
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
+    game.user.getFlag("rpgup-vdo-ninja", "preferences")?.collapsed === true);
   await controlsPage.waitForFunction(() =>
     document.querySelector("#ddu-party")?.getBoundingClientRect().left < 4);
   assert.equal(await controlsPage.locator("#ddu-party").evaluate(el => el.style.translate), "",

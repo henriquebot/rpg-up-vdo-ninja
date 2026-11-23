@@ -31,25 +31,25 @@
   --rpgup-color-scheme: light;
 }
 .rpgup-vdo .window-content { overflow: auto; padding: 16px; container-type: inline-size; container-name: rpgup; }
-.rpgup-vdo .window-content input:not([type="checkbox"]):not([type="range"]), .rpgup-vdo .window-content select { border: 1px solid var(--rpgup-line); border-radius: 5px; min-height: 32px; padding: 4px 7px; color: var(--rpgup-text); background: color-mix(in srgb, var(--rpgup-text) 5%, transparent); }
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]), .rpgup-world-config .window-content select { border: 1px solid var(--rpgup-line); border-radius: 5px; min-height: 32px; padding: 4px 7px; color: var(--rpgup-text); background: color-mix(in srgb, var(--rpgup-text) 5%, transparent); }
 /* Native option popup must follow the chosen Foundry theme (including Windows). */
-.rpgup-vdo .window-content select {
+.rpgup-world-config .window-content select {
   color-scheme: var(--rpgup-color-scheme);
   background-color: var(--rpgup-surface);
   color: var(--rpgup-menu-text);
 }
-.rpgup-vdo .window-content select option {
+.rpgup-world-config .window-content select option {
   background-color: var(--rpgup-surface);
   color: var(--rpgup-menu-text);
 }
-.rpgup-vdo .window-content select option:checked {
+.rpgup-world-config .window-content select option:checked {
   background-color: var(--rpgup-tab-selected);
   color: var(--rpgup-tab-selected-text);
 }
-.rpgup-vdo .window-content select option:disabled { color: var(--rpgup-muted); }
-.rpgup-vdo .window-content button { border-radius: 5px; min-height: 30px; padding: 4px 8px; }
-.rpgup-vdo .window-content button:not(.rpgup-primary) { color: var(--rpgup-text); background: var(--rpgup-card); border: 1px solid var(--rpgup-line); }
-.rpgup-vdo .window-content button:not(.rpgup-primary):hover { border-color: var(--rpgup-accent); }
+.rpgup-world-config .window-content select option:disabled { color: var(--rpgup-muted); }
+.rpgup-world-config .window-content button { border-radius: 5px; min-height: 30px; padding: 4px 8px; }
+.rpgup-world-config .window-content button:not(.rpgup-primary) { color: var(--rpgup-text); background: var(--rpgup-card); border: 1px solid var(--rpgup-line); }
+.rpgup-world-config .window-content button:not(.rpgup-primary):hover { border-color: var(--rpgup-accent); }
 .rpgup-vdo button:disabled, .rpgup-vdo input:disabled { opacity: 0.55; }
 .rpgup-room-dock > .window-header { border-bottom: 1px solid var(--rpgup-line); }
 .rpgup-room-dock > .window-header .header-control { transition: color 120ms, background-color 120ms; border-radius: 5px; }
@@ -60,13 +60,13 @@
 .rpgup-vdo .rpgup-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .rpgup-vdo .rpgup-actions button { width: auto; flex: 0 1 auto; min-height: 32px; }
 .rpgup-vdo button > i { margin-right: 5px; }
-.rpgup-vdo .rpgup-panel { border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 9px; padding: 12px; margin: 0; min-width: 0; }
-.rpgup-vdo .rpgup-panel legend { padding: 0 6px; color: var(--rpgup-accent-readable); font-size: 13px; font-weight: 600; }
-.rpgup-vdo .rpgup-help { color: var(--rpgup-muted); font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
+.rpgup-world-config .rpgup-panel { border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 9px; padding: 12px; margin: 0; min-width: 0; }
+.rpgup-world-config .rpgup-panel legend { padding: 0 6px; color: var(--rpgup-accent-readable); font-size: 13px; font-weight: 600; }
+.rpgup-world-config .rpgup-help { color: var(--rpgup-muted); font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
 .rpgup-vdo .rpgup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 10px; }
 .rpgup-vdo .rpgup-intro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .rpgup-vdo .rpgup-intro h2 { margin: 0; border: 0; font-size: 20px; }
-.rpgup-vdo .rpgup-badge { display: inline-block; font-size: 11px; border: 1px solid var(--rpgup-line); border-radius: 20px; padding: 3px 8px; color: var(--rpgup-muted); white-space: nowrap; }
+.rpgup-world-config .rpgup-badge { display: inline-block; font-size: 11px; border: 1px solid var(--rpgup-line); border-radius: 20px; padding: 3px 8px; color: var(--rpgup-muted); white-space: nowrap; }
 .rpgup-vdo .rpgup-advanced { border-top: 1px solid var(--rpgup-line); padding-top: 10px; }
 .rpgup-vdo .rpgup-advanced summary { cursor: pointer; font-size: 12px; color: var(--rpgup-muted); padding: 4px 0; }
 .rpgup-vdo .rpgup-advanced[open] summary { margin-bottom: 10px; }
@@ -165,7 +165,7 @@ body.rpgup-vdo-docked #interface {
 .rpgup-config-footer button { flex: 0 1 auto; width: auto; min-height: 34px; }
 @media (max-width: 640px) {
   .rpgup-vdo .rpgup-grid { grid-template-columns: minmax(0, 1fr); }
-  .rpgup-vdo .rpgup-panel { padding: 10px; }
+  .rpgup-world-config .rpgup-panel { padding: 10px; }
   .rpgup-room-dock .rpgup-toolbar { gap: 10px; }
   .rpgup-room-dock .rpgup-field { flex: 1 1 160px; }
   .rpgup-room-dock .rpgup-toggle { flex-basis: 100%; }
@@ -227,10 +227,10 @@ body.rpgup-vdo-docked #interface {
 .rpgup-vdo .window-content,
 .rpgup-vdo .rpgup-config-form,
 .rpgup-vdo .rpgup-tab-pane,
-.rpgup-vdo .rpgup-option-editor,
-.rpgup-vdo .rpgup-audio-filter-grid { color: var(--rpgup-text); }
+.rpgup-world-config .rpgup-option-editor,
+.rpgup-world-config .rpgup-audio-filter-grid { color: var(--rpgup-text); }
 .rpgup-vdo .rpgup-config-footer p,
-.rpgup-vdo .rpgup-help,
+.rpgup-world-config .rpgup-help,
 .rpgup-vdo .rpgup-option-entry code,
 .rpgup-vdo .rpgup-audio-filter-toggle { color: var(--rpgup-muted); }
 .rpgup-vdo .rpgup-field > span,
@@ -461,3 +461,569 @@ body.rpgup-vdo-docked #interface {
 .rpgup-world-config .rpgup-global-reconnect-status { margin: 0; font-size: 11px; color: var(--rpgup-muted); }
 .rpgup-world-config .rpgup-global-reconnect-status:empty { display: none; }
 
+
+
+/* -------------------------------------------------------------------------
+   RPGUP commercial HUD polish
+   Presentation-only layer: no selectors used by module logic are renamed.
+   ------------------------------------------------------------------------- */
+.rpgup-vdo {
+  --rpgup-elevation: 0 18px 48px rgb(0 0 0 / 28%);
+  --rpgup-control-radius: 8px;
+}
+.rpgup-world-config.application {
+  border: 1px solid var(--rpgup-line);
+  border-radius: 13px;
+  box-shadow: var(--rpgup-elevation);
+  overflow: hidden;
+}
+.rpgup-world-config > .window-header {
+  min-height: 42px;
+  padding: 5px 9px 5px 13px;
+  border-bottom: 1px solid var(--rpgup-line);
+  background: var(--rpgup-surface);
+  color: var(--rpgup-text);
+}
+.rpgup-world-config > .window-header .window-title {
+  color: var(--rpgup-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.rpgup-world-config > .window-header .header-control {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--rpgup-muted);
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+.rpgup-world-config > .window-header .header-control:hover,
+.rpgup-world-config > .window-header .header-control:focus-visible {
+  color: var(--rpgup-accent-readable);
+  border-color: var(--rpgup-line);
+  background: var(--rpgup-card);
+}
+.rpgup-vdo .window-content {
+  background: var(--rpgup-surface);
+  color: var(--rpgup-text);
+}
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]),
+.rpgup-world-config .window-content select,
+.rpgup-world-config .window-content textarea {
+  min-height: 36px;
+  border: 1px solid var(--rpgup-line);
+  border-radius: var(--rpgup-control-radius);
+  background: var(--rpgup-surface);
+  color: var(--rpgup-text);
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]):hover,
+.rpgup-world-config .window-content select:hover,
+.rpgup-world-config .window-content textarea:hover {
+  border-color: color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line));
+}
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]):focus,
+.rpgup-world-config .window-content select:focus,
+.rpgup-world-config .window-content textarea:focus {
+  border-color: var(--rpgup-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rpgup-accent) 17%, transparent);
+  outline: none;
+}
+.rpgup-world-config .window-content select,
+.rpgup-world-config .window-content select option {
+  color-scheme: var(--rpgup-color-scheme);
+  background-color: var(--rpgup-surface);
+  color: var(--rpgup-menu-text);
+}
+.rpgup-world-config .window-content button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: var(--rpgup-control-radius);
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+.rpgup-world-config .window-content button:not(.rpgup-primary) {
+  border: 1px solid var(--rpgup-line);
+  background: var(--rpgup-card);
+  color: var(--rpgup-text);
+}
+.rpgup-world-config .window-content button:not(:disabled):not(.rpgup-primary):hover {
+  border-color: color-mix(in srgb, var(--rpgup-accent) 70%, var(--rpgup-line));
+  background: color-mix(in srgb, var(--rpgup-accent) 9%, var(--rpgup-surface));
+}
+.rpgup-world-config .window-content button:not(:disabled):active { transform: translateY(1px); }
+.rpgup-world-config .window-content button:disabled { cursor: not-allowed; opacity: .52; }
+.rpgup-world-config .window-content button.rpgup-primary,
+.rpgup-vdo .window-content .rpgup-primary {
+  min-height: 36px;
+  border: 1px solid #a77e4b;
+  border-radius: var(--rpgup-control-radius);
+  background: #805b32;
+  color: #fff8ee;
+  box-shadow: 0 2px 7px rgb(0 0 0 / 12%);
+}
+.rpgup-world-config .window-content button.rpgup-primary:not(:disabled):hover,
+.rpgup-vdo .window-content .rpgup-primary:not(:disabled):hover {
+  border-color: #c69b66;
+  background: #946c3d;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 17%);
+}
+.rpgup-world-config .window-content button:focus-visible,
+.rpgup-world-config .window-content input:focus-visible,
+.rpgup-world-config .window-content select:focus-visible,
+.rpgup-world-config .window-content summary:focus-visible {
+  outline: 2px solid var(--rpgup-accent);
+  outline-offset: 2px;
+}
+.rpgup-world-config .rpgup-help,
+.rpgup-vdo .rpgup-config-footer p {
+  color: var(--rpgup-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.rpgup-world-config .rpgup-badge {
+  padding: 4px 9px;
+  border-color: var(--rpgup-line);
+  border-radius: 999px;
+  background: var(--rpgup-card);
+  color: var(--rpgup-muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .015em;
+}
+.rpgup-world-config .rpgup-panel,
+.rpgup-world-config .rpgup-option-editor,
+.rpgup-world-config .rpgup-audio-filter-grid {
+  border: 1px solid var(--rpgup-line);
+  border-radius: 11px;
+  background: var(--rpgup-surface);
+}
+.rpgup-world-config {
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.rpgup-world-config.application {
+  box-sizing: border-box;
+}
+.rpgup-world-config .window-content {
+  padding: 18px 20px;
+  overflow: auto;
+  background: var(--rpgup-surface);
+}
+.rpgup-world-config .rpgup-config-form {
+  gap: 17px;
+}
+.rpgup-world-config .rpgup-global-reconnect {
+  top: 0;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--rpgup-accent) 35%, var(--rpgup-line));
+  border-radius: 11px;
+  background: var(--rpgup-surface);
+  box-shadow: 0 5px 14px rgb(0 0 0 / 8%);
+}
+.rpgup-world-config .rpgup-global-reconnect .rpgup-primary {
+  min-height: 35px;
+}
+.rpgup-world-config .rpgup-global-reconnect-status {
+  color: var(--rpgup-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.rpgup-world-config .rpgup-group-bar {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  gap: 4px;
+  margin: 0 0 7px;
+  padding: 4px;
+  border: 1px solid var(--rpgup-line);
+  border-radius: 10px;
+  background: var(--rpgup-card);
+}
+.rpgup-world-config .rpgup-group-button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--rpgup-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+.rpgup-world-config .rpgup-group-button[aria-pressed="true"] {
+  border-color: var(--rpgup-line);
+  background: var(--rpgup-tab-selected);
+  color: var(--rpgup-tab-selected-text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 9%);
+}
+.rpgup-world-config .rpgup-tab-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding: 6px;
+  margin: 0 0 15px;
+  border: 1px solid var(--rpgup-line);
+  border-radius: 11px;
+  background: var(--rpgup-surface);
+}
+.rpgup-world-config .rpgup-tab-bar .rpgup-tab-button {
+  display: inline-flex;
+  flex: 0 0 38px;
+  min-width: 38px;
+  width: 38px;
+  height: 37px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--rpgup-muted);
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.rpgup-world-config .rpgup-tab-bar .rpgup-tab-button .rpgup-tab-label {
+  display: none;
+}
+.rpgup-world-config .rpgup-tab-bar .rpgup-tab-button i {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 13px;
+}
+.rpgup-world-config .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line)) !important;
+  background: var(--rpgup-tab-selected) !important;
+  color: var(--rpgup-tab-selected-text) !important;
+  box-shadow: inset 0 -2px 0 var(--rpgup-accent);
+}
+.rpgup-world-config .rpgup-tab-bar .rpgup-tab-button:not([aria-selected="true"]):hover {
+  border-color: var(--rpgup-line);
+  background: var(--rpgup-surface);
+  color: var(--rpgup-text);
+}
+.rpgup-world-config .rpgup-tab-bar .rpgup-tour-start {
+  flex: 0 0 37px;
+  min-width: 37px;
+  width: 37px;
+  margin-left: auto;
+  padding: 0;
+}
+.rpgup-world-config .rpgup-tab-bar .rpgup-tour-start i { margin: 0; }
+.rpgup-world-config .rpgup-tab-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 13px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--rpgup-line);
+}
+.rpgup-world-config .rpgup-tab-heading h3 {
+  margin: 0;
+  color: var(--rpgup-text);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.015em;
+}
+.rpgup-world-config .rpgup-tab-section { gap: 15px; }
+.rpgup-world-config .rpgup-tab-section > .rpgup-help { margin: 0; }
+.rpgup-world-config .rpgup-intro {
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 11px;
+  border-bottom: 1px solid var(--rpgup-line);
+}
+.rpgup-world-config .rpgup-intro h2 {
+  color: var(--rpgup-text);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.rpgup-world-config .rpgup-grid {
+  gap: 13px;
+  margin: 0;
+}
+.rpgup-world-config .rpgup-grid > .rpgup-field {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--rpgup-line);
+  border-radius: 10px;
+  background: var(--rpgup-surface);
+}
+.rpgup-world-config .rpgup-field {
+  gap: 7px;
+}
+.rpgup-world-config .rpgup-field-caption {
+  color: var(--rpgup-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+.rpgup-world-config .rpgup-field-caption .rpgup-info-icon {
+  margin-left: auto;
+}
+.rpgup-world-config .rpgup-field input,
+.rpgup-world-config .rpgup-field select {
+  width: 100%;
+  min-width: 0;
+}
+.rpgup-world-config .rpgup-config-form input::placeholder {
+  color: var(--rpgup-muted);
+  opacity: .9;
+}
+.rpgup-world-config .rpgup-table-wrap {
+  margin-top: 8px;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--rpgup-line);
+  border-radius: 11px;
+  background: var(--rpgup-surface);
+}
+.rpgup-world-config .rpgup-config-form table {
+  width: 100%;
+  min-width: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.rpgup-world-config .rpgup-config-form th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--rpgup-line);
+  background: var(--rpgup-surface);
+  color: var(--rpgup-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+.rpgup-world-config .rpgup-config-form td {
+  padding: 11px 8px;
+  border-bottom: 1px solid var(--rpgup-line);
+  color: var(--rpgup-text);
+  font-size: 11px;
+}
+.rpgup-world-config .rpgup-config-form tbody tr:last-child td { border-bottom: 0; }
+.rpgup-world-config .rpgup-config-form td small {
+  margin-top: 3px;
+  color: var(--rpgup-muted);
+  font-size: 10px;
+}
+.rpgup-world-config .rpgup-config-form td input {
+  min-height: 33px;
+  padding: 5px 7px;
+  font-size: 11px;
+}
+.rpgup-world-config .rpgup-config-form .rpgup-copy-link {
+  gap: 5px;
+}
+.rpgup-world-config .rpgup-config-form .rpgup-copy-link input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+.rpgup-world-config .rpgup-config-form .rpgup-copy-link input:focus {
+  text-overflow: clip;
+}
+.rpgup-world-config .rpgup-config-form .rpgup-copy-link button {
+  min-height: 33px;
+  border-radius: 8px;
+}
+.rpgup-world-config .rpgup-config-form .rpgup-link-warning {
+  color: var(--rpgup-accent-readable);
+}
+.rpgup-world-config .rpgup-config-footer {
+  z-index: 2;
+  bottom: -18px;
+  gap: 13px;
+  padding: 13px 0 4px;
+  border-top: 1px solid var(--rpgup-line);
+  background: var(--rpgup-surface);
+}
+.rpgup-world-config .rpgup-config-footer p {
+  color: var(--rpgup-muted);
+  font-size: 11px;
+}
+.rpgup-world-config .rpgup-config-footer button { min-height: 37px; }
+.rpgup-world-config .rpgup-tour {
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--rpgup-accent) 9%, var(--rpgup-surface));
+}
+.rpgup-world-config .rpgup-tour-counter {
+  color: var(--rpgup-accent-readable);
+  font-size: 10px;
+  letter-spacing: .07em;
+}
+.rpgup-world-config .rpgup-tour p { color: var(--rpgup-text); }
+.rpgup-world-config .rpgup-tour-target {
+  outline: 2px solid var(--rpgup-accent) !important;
+  outline-offset: 3px;
+}
+.rpgup-world-config .rpgup-camera-demo {
+  padding: 22px;
+  border: 1px solid var(--rpgup-line);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rpgup-accent) 15%, transparent), transparent 65%),
+    var(--rpgup-surface);
+}
+.rpgup-world-config .rpgup-camera-demo-frame {
+  border-radius: 11px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 24%);
+}
+.rpgup-world-config .rpgup-audio-filter-grid {
+  gap: 10px;
+  padding: 13px;
+}
+.rpgup-world-config .rpgup-audio-filter-toggle {
+  min-height: 34px;
+  padding: 5px 7px;
+  border-radius: 7px;
+}
+.rpgup-world-config .rpgup-audio-filter-toggle:hover {
+  background: var(--rpgup-card);
+}
+.rpgup-world-config .rpgup-audio-filter-toggle input {
+  accent-color: var(--rpgup-accent);
+}
+.rpgup-room-dock.application[data-dock="floating"] {
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: var(--rpgup-elevation);
+}
+.rpgup-room-dock > .window-header .header-control[aria-expanded="true"] {
+  border-color: var(--rpgup-line);
+  color: var(--rpgup-accent-readable);
+  background: var(--rpgup-card);
+}
+.rpgup-room-dock .rpgup-connection-alert {
+  margin: 10px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--rpgup-accent) 10%, var(--rpgup-surface));
+  color: var(--rpgup-text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.rpgup-room-dock .rpgup-frame-host { background: #12151a; }
+.rpgup-world-config .rpgup-info-icon {
+  width: 20px;
+  height: 20px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.rpgup-world-config .rpgup-info-icon:hover,
+.rpgup-world-config .rpgup-info-icon:focus-visible {
+  border-color: var(--rpgup-line);
+  background: var(--rpgup-card);
+}
+@container rpgup (max-width: 680px) {
+  .rpgup-world-config .window-content { padding: 12px; }
+  .rpgup-world-config .rpgup-tab-bar { gap: 5px; padding: 5px; }
+  .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button {
+    flex: 0 0 38px;
+    min-width: 38px;
+    width: 38px;
+    padding: 0;
+  }
+  .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button .rpgup-tab-label { display: none; }
+  .rpgup-world-config .rpgup-grid { grid-template-columns: minmax(0, 1fr); }
+  .rpgup-world-config .rpgup-grid > .rpgup-field { padding: 10px; }
+  .rpgup-world-config .rpgup-group-bar { width: 100%; }
+  .rpgup-world-config .rpgup-group-button { flex: 1 1 auto; }
+  .rpgup-world-config .rpgup-camera-demo { padding: 14px 8px; }
+}
+@media (max-width: 640px) {
+  .rpgup-world-config .window-content { padding: 12px; }
+  .rpgup-world-config .rpgup-config-form { gap: 13px; }
+  .rpgup-world-config .rpgup-tab-bar .rpgup-tour-start { margin-left: 0; }
+  .rpgup-world-config .rpgup-config-footer { bottom: -12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rpgup-world-config > .window-header .header-control,
+  .rpgup-world-config .window-content button,
+  .rpgup-world-config .window-content input,
+  .rpgup-world-config .window-content select,
+  .rpgup-world-config .window-content textarea {
+    transition: none !important;
+  }
+}
+
+/* Match Foundry's existing selected-tab selector specificity so the refined
+   active state wins without changing tab roles, IDs, or keyboard behaviour. */
+.rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line)) !important;
+  background: var(--rpgup-tab-selected) !important;
+  color: var(--rpgup-tab-selected-text) !important;
+  box-shadow: inset 0 -2px 0 var(--rpgup-accent);
+}
+
+
+
+
+
+
+/* Keep the selected tab legible while the pointer or keyboard focus remains
+   on it; Foundry's generic button hover treatment must not wash it out. */
+.rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"]:hover,
+.rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"]:focus,
+.rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"]:focus-visible,
+.rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"]:active {
+  border-color: var(--rpgup-accent) !important;
+  background: var(--rpgup-tab-selected) !important;
+  color: var(--rpgup-tab-selected-text) !important;
+}
+
+
+/* Keep the settings form and its scrollable participant table inside narrow
+   Foundry windows; the table scrolls locally instead of widening the form. */
+.rpgup-world-config .rpgup-config-form,
+.rpgup-world-config .rpgup-config-form > *,
+.rpgup-world-config .rpgup-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.rpgup-world-config .rpgup-table-wrap {
+  width: 100%;
+}
+
+
+/* Prevent flex/grid min-content sizing and form-control padding from widening
+   the GM settings pane on narrow Foundry windows. */
+.rpgup-world-config .rpgup-config-form,
+.rpgup-world-config .rpgup-config-form * {
+  box-sizing: border-box;
+}
+.rpgup-world-config .rpgup-tabs,
+.rpgup-world-config .rpgup-tab-content,
+.rpgup-world-config .rpgup-tab-pane,
+.rpgup-world-config .rpgup-tab-section,
+.rpgup-world-config .rpgup-grid,
+.rpgup-world-config .rpgup-field,
+.rpgup-world-config .rpgup-field-caption {
+  min-width: 0;
+  max-width: 100%;
+}
+.rpgup-world-config .rpgup-field-caption {
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
