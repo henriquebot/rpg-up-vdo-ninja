@@ -4,6 +4,12 @@ Interface Foundry VTT **v13/v14** para uma **Room oficial VDO.Ninja**. Um iframe
 
 **Versão de produção: 1.0.27.** Protótipo aprovado pelo usuário em 01/10/2026, com autorização expressa para produção. Compatibilidade declarada: Foundry **v13 e v14** (`minimum: 13`, `verified: 14`, `maximum: 14`). [Aprovação e evidências de teste](docs/PROTOTYPE-RESULTS.md).
 
+## Novidades da versão 1.0.27
+
+- O ícone de câmera é o único controle da dock: abre, recolhe e restaura sem encerrar a chamada.
+- Removido o botão separado de recolher/restaurar.
+- O botão de configurações usa um único SVG com câmera e engrenagem integradas.
+
 A arquitetura vigente está em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). A proposta anterior foi preservada, sem alterações, em [docs/ARCHITECTURE-OLD-MEDIAMTX.md](docs/ARCHITECTURE-OLD-MEDIAMTX.md) **apenas como histórico superado**.
 
 ## Instalar e configurar
