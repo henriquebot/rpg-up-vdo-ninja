@@ -978,18 +978,3 @@ body.rpgup-vdo-docked #interface {
 
 
 
-/* Give native selects a theme-aware custom chevron so Chromium/OS native
-   control painting cannot retain a stale dark background after theme change. */
-.rpgup-world-config .window-content select {
-  appearance: none !important;
-  background-color: var(--rpgup-surface) !important;
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--rpgup-menu-text) 50%),
-    linear-gradient(135deg, var(--rpgup-menu-text) 50%, transparent 50%);
-  background-position:
-    calc(100% - 14px) 50%,
-    calc(100% - 9px) 50%;
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-  padding-right: 28px;
-}
