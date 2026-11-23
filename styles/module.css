@@ -792,7 +792,8 @@ body.rpgup-vdo-docked #interface {
   background: var(--rpgup-surface);
 }
 .rpgup-world-config .rpgup-config-form table {
-  min-width: 1000px;
+  width: 100%;
+  min-width: 0;
   border-collapse: separate;
   border-spacing: 0;
 }
