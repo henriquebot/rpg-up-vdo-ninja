@@ -11,6 +11,7 @@ export function select(options, value, name) {
   // Inline important tokens prevent the OS/Foundry native select surface from
   // retaining a dark background when Theme V2 changes while the window is open.
   node.style.setProperty("appearance", "none", "important");
+  node.style.setProperty("-webkit-appearance", "none", "important");
   node.style.setProperty("background-color", "var(--rpgup-surface)", "important");
   node.style.setProperty("color", "var(--rpgup-menu-text)", "important");
   node.style.setProperty("color-scheme", "var(--rpgup-color-scheme)", "important");
