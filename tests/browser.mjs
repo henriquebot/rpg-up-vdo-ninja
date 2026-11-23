@@ -639,8 +639,26 @@ try {
   await page.screenshot({ path: path.join(screenshotDirectory, "unified-settings-mobile.png") });
   await page.evaluate(() => fixture.menu("worldConfig"));
   await page.screenshot({ path: path.join(screenshotDirectory, "world-obs-mobile.png") });
-  const panelOverflow = await page.locator(".rpgup-config-form").evaluate(form => form.scrollWidth > form.clientWidth + 2);
-  assert.equal(panelOverflow, false, "Painel GM fica legível em viewport estreita");
+  const panelOverflow = await page.locator(".rpgup-config-form").evaluate(form => ({
+    overflow: form.scrollWidth > form.clientWidth + 2,
+    scrollWidth: form.scrollWidth,
+    clientWidth: form.clientWidth,
+    formRect: form.getBoundingClientRect().toJSON(),
+    children: Array.from(form.children).map(el => ({
+      tag: el.tagName, className: el.className, id: el.id,
+      scrollWidth: el.scrollWidth, clientWidth: el.clientWidth,
+      rect: el.getBoundingClientRect().toJSON()
+    })),
+    overflowing: Array.from(form.querySelectorAll("*")).filter(el =>
+      el.scrollWidth > el.clientWidth + 2 &&
+      !["auto", "scroll", "hidden", "clip"].includes(getComputedStyle(el).overflowX)
+    ).slice(0, 15).map(el => ({
+      tag: el.tagName, className: el.className, id: el.id,
+      scrollWidth: el.scrollWidth, clientWidth: el.clientWidth,
+      rect: el.getBoundingClientRect().toJSON()
+    }))
+  }));
+  assert.equal(panelOverflow.overflow, false, `Painel GM fica legível em viewport estreita: ${JSON.stringify(panelOverflow)}`);
   await page.evaluate(() => fixture.closeConfig());
   await page.evaluate(async () => {
     game.world = { title: "Crônicas de Artraga" };
