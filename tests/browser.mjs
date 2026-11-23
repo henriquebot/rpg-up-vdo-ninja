@@ -711,9 +711,6 @@ try {
   assert.equal(toolMetadata.vdo.visible, true);
   assert.equal(toolMetadata.toolCount, 3, "Only camera toggle and settings controls are added to the Token palette");
   assert.equal(toolMetadata.collapse, undefined, "The separate collapse button must not be registered");
-  assert.equal(toolMetadata.collapse.name, "rpgup-vdo-collapse");
-  assert.equal(toolMetadata.collapse.button, true);
-  assert.equal(toolMetadata.collapse.visible, true);
   assert.equal(toolMetadata.drawingsUnchanged, 0);
   const settingsIcon = await controlsPage.evaluate(() => {
     const node = document.createElement("i");
@@ -726,7 +723,7 @@ try {
   });
   assert.equal(settingsIcon.display, "inline-block");
   assert.ok(Number.parseFloat(settingsIcon.width) > 0 && Number.parseFloat(settingsIcon.height) > 0);
-  assert.match(settingsIcon.mask, /camera-settings\\.svg/);
+  assert.ok(settingsIcon.mask.includes("camera-settings.svg"));
   const settingsIconAsset = await controlsPage.request.get(`${base}/assets/camera-settings.svg`);
   assert.equal(settingsIconAsset.status(), 200, "The single camera-and-gear SVG is packaged as a module asset");
   assert.equal(await controlsPage.locator(".rpgup-hud-tab, .rpgup-sidebar-pane").count(), 0,
