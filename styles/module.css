@@ -978,3 +978,13 @@ body.rpgup-vdo-docked #interface {
 
 
 
+
+
+/* Keep the selected tab legible while the pointer or keyboard focus remains
+   on it; Foundry's generic button hover treatment must not wash it out. */
+.rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"]:hover,
+.rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"]:focus-visible {
+  border-color: var(--rpgup-accent) !important;
+  background: var(--rpgup-tab-selected) !important;
+  color: var(--rpgup-tab-selected-text) !important;
+}
