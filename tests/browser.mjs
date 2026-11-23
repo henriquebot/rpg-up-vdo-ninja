@@ -246,6 +246,11 @@ try {
         navBg: nav.backgroundColor, selectColor: select.color, selectBg: select.backgroundColor,
         selectScheme: select.colorScheme, footerBg: footer.backgroundColor, footerColor: footer.color,
         helpColor: help.color, labelColor: label.color,
+        bodyClasses: document.body.className,
+        selectRoot: document.querySelector('select[name="audioFilterPreset"]')?.closest("#rpgup-vdo-world-config")?.id ?? null,
+        selectDock: document.querySelector('select[name="audioFilterPreset"]')?.closest("#rpgup-vdo-room")?.id ?? null,
+        selectClasses: document.querySelector('select[name="audioFilterPreset"]')?.closest(".rpgup-vdo")?.className ?? null,
+        selectInlineStyle: document.querySelector('select[name="audioFilterPreset"]')?.getAttribute("style"),
         contrastSelect: contrast(select.color, select.backgroundColor),
         contrastTab: contrast(tab.color, tab.backgroundColor),
         contrastFooter: contrast(footer.color, footer.backgroundColor)
