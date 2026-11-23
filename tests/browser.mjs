@@ -41,6 +41,7 @@ async function dockTab(page, key) {
     await page.getByRole("button", { name: "Minha câmera", exact: true }).click();
   }
   await tab.click();
+  assert.equal(await tab.getAttribute("aria-selected"), "true", `Personal tab ${key} should become selected`);
 }
 async function worldTab(page, key) {
   await openSettings(page);
@@ -50,6 +51,7 @@ async function worldTab(page, key) {
     await page.getByRole("button", { name: group, exact: true }).click();
   }
   await tab.click();
+  assert.equal(await tab.getAttribute("aria-selected"), "true", `World tab ${key} should become selected`);
 }
 try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
@@ -247,6 +249,7 @@ try {
         selectScheme: select.colorScheme, footerBg: footer.backgroundColor, footerColor: footer.color,
         helpColor: help.color, labelColor: label.color,
         selectSurface: select.getPropertyValue("--rpgup-surface"),
+        tabSelected: tab.getPropertyValue("aria-selected"),
         contrastSelect: contrast(select.color, (() => {
           const surface = select.getPropertyValue("--rpgup-surface").trim();
           const hex = surface.match(/^#([\da-f]{6})$/i);
