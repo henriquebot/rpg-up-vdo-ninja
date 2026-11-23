@@ -241,7 +241,7 @@ try {
       };
       const luminance = color => parse(color).reduce((sum, value, index) => sum + value * [.2126,.7152,.0722][index], 0);
       const cssColor = value => {
-        const hex = value.trim().match(/^#([\\da-f]{6})$/i);
+        const hex = value.trim().match(/^#([\da-f]{6})$/i);
         if (!hex) return value;
         const code = hex[1];
         return `rgb(${parseInt(code.slice(0, 2), 16)}, ${parseInt(code.slice(2, 4), 16)}, ${parseInt(code.slice(4, 6), 16)})`;
