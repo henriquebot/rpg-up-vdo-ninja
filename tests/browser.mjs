@@ -36,7 +36,7 @@ async function openSettings(page) {
 }
 async function dockTab(page, key) {
   await openSettings(page);
-  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  const tab = page.locator(`#rpgup-vdo-room #rpgup-world-tab-${key}`);
   if (!await tab.isVisible()) {
     await page.getByRole("button", { name: "Minha câmera", exact: true }).click();
   }
@@ -44,7 +44,7 @@ async function dockTab(page, key) {
 }
 async function worldTab(page, key) {
   await openSettings(page);
-  const tab = page.locator(`#rpgup-world-tab-${key}`);
+  const tab = page.locator(`#rpgup-vdo-world-config #rpgup-world-tab-${key}`);
   if (!await tab.isVisible()) {
     const group = ["general", "participants", "appearance"].includes(key) ? "Mesa" : "Avançado";
     await page.getByRole("button", { name: group, exact: true }).click();
@@ -223,9 +223,9 @@ try {
     const visual = await page.evaluate(() => {
       const get = selector => getComputedStyle(document.querySelector(selector));
       const app = get("#rpgup-vdo-world-config");
-      const tab = get("#rpgup-world-tab-audioFilters");
+      const tab = get("#rpgup-vdo-world-config #rpgup-world-tab-audioFilters");
       const nav = get("#rpgup-vdo-world-config .rpgup-tab-bar");
-      const select = get('select[name="audioFilterPreset"]');
+      const select = get('#rpgup-vdo-world-config select[name="audioFilterPreset"]');
       const footer = get("#rpgup-vdo-world-config .rpgup-config-footer");
       const help = get("#rpgup-world-pane-audioFilters .rpgup-help");
       const label = get("#rpgup-world-pane-audioFilters .rpgup-audio-filter-toggle > span");
