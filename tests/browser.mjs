@@ -225,7 +225,8 @@ try {
     const visual = await page.evaluate(() => {
       const get = selector => getComputedStyle(document.querySelector(selector));
       const app = get("#rpgup-vdo-world-config");
-      const tab = get("#rpgup-vdo-world-config #rpgup-world-tab-audioFilters");
+      const tabElement = document.querySelector("#rpgup-vdo-world-config #rpgup-world-tab-audioFilters");
+      const tab = getComputedStyle(tabElement);
       const nav = get("#rpgup-vdo-world-config .rpgup-tab-bar");
       const select = get('#rpgup-vdo-world-config select[name="audioFilterPreset"]');
       const footer = get("#rpgup-vdo-world-config .rpgup-config-footer");
@@ -239,6 +240,12 @@ try {
         });
       };
       const luminance = color => parse(color).reduce((sum, value, index) => sum + value * [.2126,.7152,.0722][index], 0);
+      const cssColor = value => {
+        const hex = value.trim().match(/^#([\\da-f]{6})$/i);
+        if (!hex) return value;
+        const code = hex[1];
+        return `rgb(${parseInt(code.slice(0, 2), 16)}, ${parseInt(code.slice(2, 4), 16)}, ${parseInt(code.slice(4, 6), 16)})`;
+      };
       const contrast = (fg,bg) => {
         const a=luminance(fg), b=luminance(bg);
         return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
@@ -249,20 +256,15 @@ try {
         selectScheme: select.colorScheme, footerBg: footer.backgroundColor, footerColor: footer.color,
         helpColor: help.color, labelColor: label.color,
         selectSurface: select.getPropertyValue("--rpgup-surface"),
-        tabSelected: tab.getPropertyValue("aria-selected"),
-        contrastSelect: contrast(select.color, (() => {
-          const surface = select.getPropertyValue("--rpgup-surface").trim();
-          const hex = surface.match(/^#([\da-f]{6})$/i);
-          if (!hex) return surface;
-          const value = hex[1];
-          return `rgb(${parseInt(value.slice(0, 2), 16)}, ${parseInt(value.slice(2, 4), 16)}, ${parseInt(value.slice(4, 6), 16)})`;
-        })()),
-        contrastTab: contrast(tab.color, tab.backgroundColor),
+        tabSelected: tabElement.getAttribute("aria-selected"),
+        contrastSelect: contrast(select.color, cssColor(select.getPropertyValue("--rpgup-surface"))),
+        contrastTab: contrast(cssColor(tab.getPropertyValue("--rpgup-tab-selected-text")), cssColor(tab.getPropertyValue("--rpgup-tab-selected"))),
         contrastFooter: contrast(footer.color, footer.backgroundColor)
       };
     });
     assert.ok(visual.contrastSelect >= 4.5, `${mode}: dropdown text contrast, ${JSON.stringify(visual)}`);
-    assert.ok(visual.contrastTab >= 4.5, `${mode}: selected icon contrast, ${JSON.stringify(visual)}`);
+    assert.equal(visual.tabSelected, "true", `${mode}: expected the audio filters tab to remain selected`);
+    assert.ok(visual.contrastTab >= 4.5, `${mode}: selected icon theme tokens contrast, ${JSON.stringify(visual)}`);
     assert.ok(visual.contrastFooter >= 4.5, `${mode}: footer text contrast, ${JSON.stringify(visual)}`);
     assert.equal(visual.selectScheme, mode, `${mode}: native dropdown must match Foundry theme`);
     assert.equal(visual.navBg, visual.footerBg, `${mode}: tabs and footer share theme background`);
