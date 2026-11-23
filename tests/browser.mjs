@@ -135,7 +135,8 @@ try {
     await page.getByRole("combobox", { name: "Posição do dock", exact: true }).selectOption(dock);
     const geometry = await page.locator("#rpgup-vdo-room").boundingBox();
     assert.ok(geometry.width >= 320 && geometry.height >= 240);
-    assert.ok(geometry.x >= 0 && geometry.y >= 0 && geometry.x + geometry.width <= 1440 && geometry.y + geometry.height <= 900);
+    assert.ok(geometry.x >= 0 && geometry.y >= 0 && geometry.x + geometry.width <= 1440 && geometry.y + geometry.height <= 900,
+      `Dock ${dock} escaped viewport: ${JSON.stringify(geometry)}`);
     const iface = await page.locator("#interface").boundingBox();
     if (dock === "left") {
       assert.equal(geometry.x, 0);
