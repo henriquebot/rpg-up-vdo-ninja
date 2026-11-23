@@ -688,20 +688,23 @@ body.rpgup-vdo-docked #interface {
 }
 .rpgup-world-config .rpgup-tab-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 7px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
   padding: 6px;
   margin: 0 0 15px;
   border: 1px solid var(--rpgup-line);
   border-radius: 11px;
-  background: var(--rpgup-card);
+  background: var(--rpgup-surface);
 }
 .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button {
   display: inline-flex;
-  flex: 0 1 auto;
-  min-width: 104px;
-  width: auto;
+  flex: 0 0 38px;
+  min-width: 38px;
+  width: 38px;
   height: 37px;
   align-items: center;
   justify-content: center;
@@ -716,9 +719,7 @@ body.rpgup-vdo-docked #interface {
   white-space: nowrap;
 }
 .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button .rpgup-tab-label {
-  display: inline;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: none;
 }
 .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button i {
   flex: 0 0 auto;
@@ -958,10 +959,10 @@ body.rpgup-vdo-docked #interface {
   .rpgup-world-config .window-content { padding: 12px; }
   .rpgup-world-config .rpgup-tab-bar { gap: 5px; padding: 5px; }
   .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button {
-    flex: 0 1 auto;
+    flex: 0 0 38px;
     min-width: 38px;
-    width: auto;
-    padding: 0 9px;
+    width: 38px;
+    padding: 0;
   }
   .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button .rpgup-tab-label { display: none; }
   .rpgup-world-config .rpgup-grid { grid-template-columns: minmax(0, 1fr); }
