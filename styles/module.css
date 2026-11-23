@@ -990,3 +990,17 @@ body.rpgup-vdo-docked #interface {
   background: var(--rpgup-tab-selected) !important;
   color: var(--rpgup-tab-selected-text) !important;
 }
+
+
+/* Keep the settings form and its scrollable participant table inside narrow
+   Foundry windows; the table scrolls locally instead of widening the form. */
+.rpgup-world-config .rpgup-config-form,
+.rpgup-world-config .rpgup-config-form > *,
+.rpgup-world-config .rpgup-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.rpgup-world-config .rpgup-table-wrap {
+  width: 100%;
+}
