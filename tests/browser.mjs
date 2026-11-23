@@ -662,16 +662,22 @@ try {
     };
     Hooks.callAll("getSceneControlButtons", sceneControlSpec);
     return {
+      cameras: sceneControlSpec.tokens.tools["rpgup-vdo-cameras"],
       vdo: sceneControlSpec.tokens.tools["rpgup-vdo-options"],
       collapse: sceneControlSpec.tokens.tools["rpgup-vdo-collapse"],
       toolCount: Object.keys(sceneControlSpec.tokens.tools).length,
       drawingsUnchanged: Object.keys(sceneControlSpec.drawings.tools).length
     };
   });
+  assert.equal(toolMetadata.cameras.name, "rpgup-vdo-cameras");
+  assert.equal(toolMetadata.cameras.icon, "fa-solid fa-video");
+  assert.equal(toolMetadata.cameras.button, true);
+  assert.equal(toolMetadata.cameras.visible, true);
   assert.equal(toolMetadata.vdo.name, "rpgup-vdo-options");
+  assert.equal(toolMetadata.vdo.icon, "fa-solid fa-gear");
   assert.equal(toolMetadata.vdo.button, true);
   assert.equal(toolMetadata.vdo.visible, true);
-  assert.equal(toolMetadata.toolCount, 3);
+  assert.equal(toolMetadata.toolCount, 4);
   assert.equal(toolMetadata.collapse.name, "rpgup-vdo-collapse");
   assert.equal(toolMetadata.collapse.button, true);
   assert.equal(toolMetadata.collapse.visible, true);
@@ -704,6 +710,17 @@ try {
   assert.match(await controlsPage.locator(".rpgup-global-reconnect-status").innerText(), /Reconexão|Aplicando/i);
   await controlsPage.evaluate(() => game.modules.get("rpgup-vdo-ninja").api.toggleOptions());
   await controlsPage.waitForFunction(() => !document.querySelector("#rpgup-vdo-world-config"));
+
+  // The camera icon opens a closed dock and never opens settings.
+  await controlsPage.evaluate(async () => {
+    await (await fixture.dock()).close();
+    sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange();
+  });
+  await controlsPage.waitForFunction(() => document.querySelector("#rpgup-vdo-room iframe"));
+  assert.equal(await controlsPage.locator("#rpgup-vdo-room iframe").count(), 1);
+  assert.equal(await controlsPage.locator("#rpgup-vdo-world-config").count(), 0);
+  console.log("Camera Scene Control opens the VDO dock: OK.");
+
   // DAS Combat UI's Party lives under #interface and is fixed-positioned.
   // Its own place() runs only on DAS resize/render, so VDO must explicitly
   // re-evaluate placement when the dock visibility changes.
@@ -750,6 +767,26 @@ try {
   assert.equal(await controlsPage.locator("body").evaluate(el =>
     el.classList.contains("rpgup-vdo-docked")), false,
     "Collapsed side dock must release the main Foundry interface space");
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#ddu-party")?.getBoundingClientRect().left < 4);
+
+  // The camera icon also restores a persisted collapsed dock without replacing
+  // the active iframe or losing the user's persistent preference state.
+  await controlsPage.evaluate(() => sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange());
+  await controlsPage.waitForFunction(() =>
+    !document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
+    game.user.getFlag("rpgup-vdo-ninja", "preferences")?.collapsed === false);
+  assert.equal(await controlsPage.evaluate(() =>
+    document.querySelector("#rpgup-vdo-room iframe") === vdoFrameBeforeCollapse &&
+    vdoFrameBeforeCollapse.src === vdoSourceBeforeCollapse), true,
+    "Camera control restores the same live VDO browsing context");
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#ddu-party")?.getBoundingClientRect().left >=
+    document.querySelector("#rpgup-vdo-room").getBoundingClientRect().right + 5);
+  await controlsPage.evaluate(() => sceneControlSpec.tokens.tools["rpgup-vdo-collapse"].onChange());
+  await controlsPage.waitForFunction(() =>
+    document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
+    game.user.getFlag("rpgup-vdo-ninja", "preferences")?.collapsed === true);
   await controlsPage.waitForFunction(() =>
     document.querySelector("#ddu-party")?.getBoundingClientRect().left < 4);
   assert.equal(await controlsPage.locator("#ddu-party").evaluate(el => el.style.translate), "",
