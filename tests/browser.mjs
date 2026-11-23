@@ -36,7 +36,7 @@ async function openSettings(page) {
 }
 async function dockTab(page, key) {
   await openSettings(page);
-  const tab = page.locator(`#rpgup-vdo-room #rpgup-world-tab-${key}`);
+  const tab = page.locator(`#rpgup-vdo-world-config #rpgup-world-tab-${key}`);
   if (!await tab.isVisible()) {
     await page.getByRole("button", { name: "Minha câmera", exact: true }).click();
   }
