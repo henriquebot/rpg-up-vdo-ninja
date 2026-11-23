@@ -994,3 +994,16 @@ body.rpgup-vdo-docked #interface {
   background: #ead8bc !important;
   color: #412f1b !important;
 }
+
+
+/* Foundry can switch Theme V2 on body while native form controls keep the
+   previous palette. Target the GM audio preset directly for that transition. */
+body.theme-light #rpgup-vdo-world-config select[name="audioFilterPreset"] {
+  color-scheme: light !important;
+  background: #f3efe7 !important;
+  color: #272421 !important;
+}
+body.theme-light #rpgup-vdo-world-config #rpgup-world-tab-audioFilters[aria-selected="true"] {
+  background: #ead8bc !important;
+  color: #412f1b !important;
+}
