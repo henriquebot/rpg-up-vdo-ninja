@@ -713,12 +713,14 @@ try {
   assert.equal(toolMetadata.collapse, undefined, "The separate collapse button must not be registered");
   assert.equal(toolMetadata.drawingsUnchanged, 0);
   const settingsIcon = await controlsPage.evaluate(() => {
+    const host = document.createElement("div");
     const node = document.createElement("i");
     node.className = "rpgup-camera-gear-icon";
-    document.body.append(node);
+    host.append(node);
+    document.body.append(host);
     const style = getComputedStyle(node);
     const result = { display: style.display, width: style.width, height: style.height, mask: style.maskImage };
-    node.remove();
+    host.remove();
     return result;
   });
   assert.equal(settingsIcon.display, "inline-block");
