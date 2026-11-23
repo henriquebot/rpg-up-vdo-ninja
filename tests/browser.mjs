@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // Optional development-only dependency; never ships with the Foundry module.
 const { chromium } = await import(process.env.PLAYWRIGHT_PACKAGE ? pathToFileURL(process.env.PLAYWRIGHT_PACKAGE).href : "playwright");
 const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
-const mime = { ".js": "text/javascript", ".mjs": "text/javascript", ".html": "text/html", ".css": "text/css" };
+const mime = { ".js": "text/javascript", ".mjs": "text/javascript", ".html": "text/html", ".css": "text/css", ".svg": "image/svg+xml" };
 const avatarSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" fill="#285b8a"/><circle cx="256" cy="256" r="190" fill="#e9b35a"/></svg>';
 const server = createServer(async (request, response) => {
   try {
