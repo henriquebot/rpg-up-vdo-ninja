@@ -468,33 +468,8 @@ body.rpgup-vdo-docked #interface {
    Presentation-only layer: no selectors used by module logic are renamed.
    ------------------------------------------------------------------------- */
 .rpgup-vdo {
-  --rpgup-accent: #c99b63;
-  --rpgup-accent-readable: #e2bd8c;
-  --rpgup-line: color-mix(in srgb, var(--rpgup-text) 17%, transparent);
-  --rpgup-card: color-mix(in srgb, var(--rpgup-text) 5%, transparent);
-  --rpgup-surface: #20232b;
-  --rpgup-panel: #272b34;
-  --rpgup-menu-text: #f5f0e7;
-  --rpgup-tab-selected: #493827;
-  --rpgup-tab-selected-text: #fff8ed;
-  --rpgup-color-scheme: dark;
   --rpgup-elevation: 0 18px 48px rgb(0 0 0 / 28%);
   --rpgup-control-radius: 8px;
-  color: var(--rpgup-text);
-}
-:is(body.theme-light, .themed.theme-light) .rpgup-vdo,
-.rpgup-vdo:is(.theme-light, .themed.theme-light) {
-  --rpgup-accent: #986a37;
-  --rpgup-accent-readable: #765022;
-  --rpgup-line: color-mix(in srgb, #44372b 17%, transparent);
-  --rpgup-card: color-mix(in srgb, #44372b 4%, transparent);
-  --rpgup-surface: #f4f0e8;
-  --rpgup-panel: #fbf9f4;
-  --rpgup-menu-text: #2c261f;
-  --rpgup-tab-selected: #e9dcc7;
-  --rpgup-tab-selected-text: #3d2b18;
-  --rpgup-color-scheme: light;
-  --rpgup-elevation: 0 16px 42px rgb(57 43 25 / 16%);
 }
 .rpgup-world-config.application {
   border: 1px solid var(--rpgup-line);
@@ -542,7 +517,7 @@ body.rpgup-vdo-docked #interface {
   min-height: 36px;
   border: 1px solid var(--rpgup-line);
   border-radius: var(--rpgup-control-radius);
-  background: var(--rpgup-panel);
+  background: var(--rpgup-surface);
   color: var(--rpgup-text);
   transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
 }
@@ -561,7 +536,7 @@ body.rpgup-vdo-docked #interface {
 .rpgup-world-config .window-content select,
 .rpgup-world-config .window-content select option {
   color-scheme: var(--rpgup-color-scheme);
-  background-color: var(--rpgup-panel);
+  background-color: var(--rpgup-surface);
   color: var(--rpgup-menu-text);
 }
 .rpgup-world-config .window-content button {
@@ -579,7 +554,7 @@ body.rpgup-vdo-docked #interface {
 }
 .rpgup-world-config .window-content button:not(:disabled):not(.rpgup-primary):hover {
   border-color: color-mix(in srgb, var(--rpgup-accent) 70%, var(--rpgup-line));
-  background: color-mix(in srgb, var(--rpgup-accent) 9%, var(--rpgup-panel));
+  background: color-mix(in srgb, var(--rpgup-accent) 9%, var(--rpgup-surface));
 }
 .rpgup-world-config .window-content button:not(:disabled):active { transform: translateY(1px); }
 .rpgup-world-config .window-content button:disabled { cursor: not-allowed; opacity: .52; }
@@ -626,7 +601,7 @@ body.rpgup-vdo-docked #interface {
 .rpgup-world-config .rpgup-audio-filter-grid {
   border: 1px solid var(--rpgup-line);
   border-radius: 11px;
-  background: var(--rpgup-panel);
+  background: var(--rpgup-surface);
 }
 .rpgup-world-config {
   border-radius: 14px;
@@ -650,7 +625,7 @@ body.rpgup-vdo-docked #interface {
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--rpgup-accent) 35%, var(--rpgup-line));
   border-radius: 11px;
-  background: var(--rpgup-panel);
+  background: var(--rpgup-surface);
   box-shadow: 0 5px 14px rgb(0 0 0 / 8%);
 }
 .rpgup-world-config .rpgup-global-reconnect .rpgup-primary {
@@ -737,7 +712,7 @@ body.rpgup-vdo-docked #interface {
 }
 .rpgup-world-config .rpgup-tab-bar .rpgup-tab-button:not([aria-selected="true"]):hover {
   border-color: var(--rpgup-line);
-  background: var(--rpgup-panel);
+  background: var(--rpgup-surface);
   color: var(--rpgup-text);
 }
 .rpgup-world-config .rpgup-tab-bar .rpgup-tour-start {
@@ -786,7 +761,7 @@ body.rpgup-vdo-docked #interface {
   padding: 12px;
   border: 1px solid var(--rpgup-line);
   border-radius: 10px;
-  background: var(--rpgup-panel);
+  background: var(--rpgup-surface);
 }
 .rpgup-world-config .rpgup-field {
   gap: 7px;
@@ -814,7 +789,7 @@ body.rpgup-vdo-docked #interface {
   overflow: auto;
   border: 1px solid var(--rpgup-line);
   border-radius: 11px;
-  background: var(--rpgup-panel);
+  background: var(--rpgup-surface);
 }
 .rpgup-world-config .rpgup-config-form table {
   min-width: 1000px;
@@ -827,7 +802,7 @@ body.rpgup-vdo-docked #interface {
   z-index: 1;
   padding: 10px 8px;
   border-bottom: 1px solid var(--rpgup-line);
-  background: var(--rpgup-panel);
+  background: var(--rpgup-surface);
   color: var(--rpgup-muted);
   font-size: 10px;
   font-weight: 750;
@@ -888,7 +863,7 @@ body.rpgup-vdo-docked #interface {
   padding: 13px 14px;
   border: 1px solid color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line));
   border-radius: 10px;
-  background: color-mix(in srgb, var(--rpgup-accent) 9%, var(--rpgup-panel));
+  background: color-mix(in srgb, var(--rpgup-accent) 9%, var(--rpgup-surface));
 }
 .rpgup-world-config .rpgup-tour-counter {
   color: var(--rpgup-accent-readable);
@@ -906,7 +881,7 @@ body.rpgup-vdo-docked #interface {
   border-radius: 12px;
   background:
     radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--rpgup-accent) 15%, transparent), transparent 65%),
-    var(--rpgup-panel);
+    var(--rpgup-surface);
 }
 .rpgup-world-config .rpgup-camera-demo-frame {
   border-radius: 11px;
@@ -942,7 +917,7 @@ body.rpgup-vdo-docked #interface {
   padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line));
   border-radius: 9px;
-  background: color-mix(in srgb, var(--rpgup-accent) 10%, var(--rpgup-panel));
+  background: color-mix(in srgb, var(--rpgup-accent) 10%, var(--rpgup-surface));
   color: var(--rpgup-text);
   font-size: 12px;
   line-height: 1.5;
