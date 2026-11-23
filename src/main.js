@@ -32,15 +32,18 @@ export async function toggleDock() {
 export async function toggleDockCollapsed() {
   const dock = new RoomDock();
   if (!dock.rendered || !dock.element?.isConnected) {
-    // The user may have disabled auto-open or closed the application.
-    // The same left control then restores a visible dock in one click.
+    // The camera control is the single dock control: when closed, open it;
+    // when already rendered, collapse/restore it without ending the call.
     dock.prefs = userPrefs();
     dock.prefs.collapsed = false;
     await dock.setCollapsed(false);
     await openDock();
+    syncDockButton();
     return false;
   }
-  return dock.setCollapsed(!dock.prefs.collapsed);
+  const collapsed = await dock.setCollapsed(!dock.prefs.collapsed);
+  syncDockButton();
+  return collapsed;
 }
 
 export async function showDock() {
@@ -70,10 +73,14 @@ export async function toggleOptions() {
 }
 
 function syncDockButton() {
-  const open = Boolean(RoomDock.instance?.rendered && RoomDock.instance.element?.isConnected);
+  const dock = RoomDock.instance;
+  const open = Boolean(dock?.rendered && dock.element?.isConnected);
+  const collapsed = open && Boolean(dock.prefs.collapsed);
   document.querySelectorAll(".rpgup-open-dock").forEach(button => {
-    button.setAttribute("aria-pressed", String(open));
-    button.title = open ? "Fechar câmeras VDO.Ninja" : "Abrir câmeras VDO.Ninja";
+    button.setAttribute("aria-pressed", String(open && !collapsed));
+    button.title = !open
+      ? "Abrir câmeras VDO.Ninja"
+      : collapsed ? "Restaurar dock VDO.Ninja" : "Recolher dock VDO.Ninja";
   });
 }
 
@@ -85,37 +92,28 @@ Hooks.once("init", () => {
   game.modules.get(MODULE_ID).api = Object.freeze({ openDock, toggleDock, toggleOptions, toggleDockCollapsed, openHudSidebar: toggleOptions, dock: () => RoomDock.instance });
 });
 
-// Official Foundry v13/v14 Scene Controls API: three native actions in the
+// Official Foundry v13/v14 Scene Controls API: two native actions in the
 // left Token tool palette; no fake sidebar tab or floating overlay.
 Hooks.on("getSceneControlButtons", controls => {
   const token = controls?.tokens;
   if (!token?.tools) return;
   token.tools["rpgup-vdo-cameras"] = {
     name: "rpgup-vdo-cameras",
-    title: "Abrir câmeras VDO.Ninja",
+    title: "Abrir / recolher / restaurar dock VDO.Ninja",
     icon: "fa-solid fa-video",
     order: Object.keys(token.tools).length,
     button: true,
     visible: true,
-    onChange: () => void showDock().catch(report)
+    onChange: () => void toggleDockCollapsed().catch(report)
   };
   token.tools["rpgup-vdo-options"] = {
     name: "rpgup-vdo-options",
     title: "Configurações RPGUP VDO.Ninja",
-    icon: "fa-solid fa-gear",
+    icon: "rpgup-camera-gear-icon",
     order: Object.keys(token.tools).length,
     button: true,
     visible: true,
     onChange: () => void toggleOptions().catch(report)
-  };
-  token.tools["rpgup-vdo-collapse"] = {
-    name: "rpgup-vdo-collapse",
-    title: "Recolher / restaurar dock VDO.Ninja",
-    icon: "fa-solid fa-compress",
-    order: Object.keys(token.tools).length,
-    button: true,
-    visible: true,
-    onChange: () => void toggleDockCollapsed().catch(report)
   };
 });
 

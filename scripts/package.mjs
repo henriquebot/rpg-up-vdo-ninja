@@ -5,7 +5,7 @@ import path from "node:path";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const target = path.join(root, "dist", "rpgup-vdo-ninja");
 await mkdir(target, { recursive: true });
-for (const name of ["module.json", "src", "styles", "README.md", "docs"]) {
+for (const name of ["module.json", "src", "styles", "assets", "README.md", "docs"]) {
   await cp(path.join(root, name), path.join(target, name), { recursive: true });
 }
 const manifest = JSON.parse(await readFile(path.join(target, "module.json"), "utf8"));

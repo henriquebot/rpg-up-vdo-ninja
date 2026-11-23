@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // Optional development-only dependency; never ships with the Foundry module.
 const { chromium } = await import(process.env.PLAYWRIGHT_PACKAGE ? pathToFileURL(process.env.PLAYWRIGHT_PACKAGE).href : "playwright");
 const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
-const mime = { ".js": "text/javascript", ".mjs": "text/javascript", ".html": "text/html", ".css": "text/css" };
+const mime = { ".js": "text/javascript", ".mjs": "text/javascript", ".html": "text/html", ".css": "text/css", ".svg": "image/svg+xml" };
 const avatarSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" fill="#285b8a"/><circle cx="256" cy="256" r="190" fill="#e9b35a"/></svg>';
 const server = createServer(async (request, response) => {
   try {
@@ -701,18 +701,33 @@ try {
     };
   });
   assert.equal(toolMetadata.cameras.name, "rpgup-vdo-cameras");
+  assert.equal(toolMetadata.cameras.title, "Abrir / recolher / restaurar dock VDO.Ninja");
   assert.equal(toolMetadata.cameras.icon, "fa-solid fa-video");
   assert.equal(toolMetadata.cameras.button, true);
   assert.equal(toolMetadata.cameras.visible, true);
   assert.equal(toolMetadata.vdo.name, "rpgup-vdo-options");
-  assert.equal(toolMetadata.vdo.icon, "fa-solid fa-gear");
+  assert.equal(toolMetadata.vdo.icon, "rpgup-camera-gear-icon");
   assert.equal(toolMetadata.vdo.button, true);
   assert.equal(toolMetadata.vdo.visible, true);
-  assert.equal(toolMetadata.toolCount, 4);
-  assert.equal(toolMetadata.collapse.name, "rpgup-vdo-collapse");
-  assert.equal(toolMetadata.collapse.button, true);
-  assert.equal(toolMetadata.collapse.visible, true);
+  assert.equal(toolMetadata.toolCount, 3, "Only camera toggle and settings controls are added to the Token palette");
+  assert.equal(toolMetadata.collapse, undefined, "The separate collapse button must not be registered");
   assert.equal(toolMetadata.drawingsUnchanged, 0);
+  const settingsIcon = await controlsPage.evaluate(() => {
+    const host = document.createElement("div");
+    const node = document.createElement("i");
+    node.className = "rpgup-camera-gear-icon";
+    host.append(node);
+    document.body.append(host);
+    const style = getComputedStyle(node);
+    const result = { display: style.display, width: style.width, height: style.height, mask: style.maskImage };
+    host.remove();
+    return result;
+  });
+  assert.equal(settingsIcon.display, "inline-block");
+  assert.ok(Number.parseFloat(settingsIcon.width) > 0 && Number.parseFloat(settingsIcon.height) > 0);
+  assert.ok(settingsIcon.mask.includes("camera-settings.svg"));
+  const settingsIconAsset = await controlsPage.request.get(`${base}/assets/camera-settings.svg`);
+  assert.equal(settingsIconAsset.status(), 200, "The single camera-and-gear SVG is packaged as a module asset");
   assert.equal(await controlsPage.locator(".rpgup-hud-tab, .rpgup-sidebar-pane").count(), 0,
     "Never attach an unauthorized tab or pane to Foundry's right sidebar");
 
@@ -779,12 +794,12 @@ try {
   assert.ok(await controlsPage.evaluate(() => dasPlaceCalls) > 0,
     "VDO should use DAS's public party.place() API");
 
-  // End-to-end persistence: collapse does not destroy/reload VDO iframe,
+  // End-to-end persistence: the camera control collapses without destroying/reloading the VDO iframe,
   // releases the Foundry canvas margin, and survives hard page reload.
   await controlsPage.evaluate(() => {
     globalThis.vdoFrameBeforeCollapse = document.querySelector("#rpgup-vdo-room iframe");
     globalThis.vdoSourceBeforeCollapse = vdoFrameBeforeCollapse.src;
-    sceneControlSpec.tokens.tools["rpgup-vdo-collapse"].onChange();
+    sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange();
   });
   await controlsPage.waitForFunction(() =>
     document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
@@ -801,7 +816,7 @@ try {
   await controlsPage.waitForFunction(() =>
     document.querySelector("#ddu-party")?.getBoundingClientRect().left < 4);
 
-  // The camera icon also restores a persisted collapsed dock without replacing
+  // The same camera icon restores a persisted collapsed dock without replacing
   // the active iframe or losing the user's persistent preference state.
   await controlsPage.evaluate(() => sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange());
   await controlsPage.waitForFunction(() =>
@@ -814,7 +829,7 @@ try {
   await controlsPage.waitForFunction(() =>
     document.querySelector("#ddu-party")?.getBoundingClientRect().left >=
     document.querySelector("#rpgup-vdo-room").getBoundingClientRect().right + 5);
-  await controlsPage.evaluate(() => sceneControlSpec.tokens.tools["rpgup-vdo-collapse"].onChange());
+  await controlsPage.evaluate(() => sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange());
   await controlsPage.waitForFunction(() =>
     document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
     game.user.getFlag("rpgup-vdo-ninja", "preferences")?.collapsed === true);
@@ -834,7 +849,7 @@ try {
     globalThis.sceneControlSpec = { tokens: { tools: {} } };
     Hooks.callAll("getSceneControlButtons", sceneControlSpec);
     globalThis.vdoFrameBeforeExpand = document.querySelector("#rpgup-vdo-room iframe");
-    sceneControlSpec.tokens.tools["rpgup-vdo-collapse"].onChange();
+    sceneControlSpec.tokens.tools["rpgup-vdo-cameras"].onChange();
   });
   await controlsPage.waitForFunction(() =>
     !document.querySelector("#rpgup-vdo-room")?.classList.contains("rpgup-dock-collapsed") &&
