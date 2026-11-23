@@ -12,6 +12,9 @@ assert.equal(manifest.version, JSON.parse(await readFile(path.join(root, "packag
 assert.equal(manifest.manifest, "https://raw.githubusercontent.com/henriquebot/rpgup-vdo-ninja/main/module.json");
 assert.equal(manifest.download, `https://github.com/henriquebot/rpgup-vdo-ninja/releases/download/v${manifest.version}/rpgup-vdo-ninja.zip`);
 for (const entry of [...manifest.esmodules, ...manifest.styles]) await readFile(path.join(root, entry));
+const cameraSettingsIcon = await readFile(path.join(root, "assets", "camera-settings.svg"), "utf8");
+assert.match(cameraSettingsIcon, /<svg\\b/);
+assert.match(await readFile(path.join(root, "styles", "module.css"), "utf8"), /camera-settings\\.svg/);
 for (const dir of ["src", "scripts", "tests"]) {
   for (const file of await readdir(path.join(root, dir))) {
     if (!/\.m?js$/.test(file)) continue;
