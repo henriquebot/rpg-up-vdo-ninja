@@ -31,25 +31,25 @@
   --rpgup-color-scheme: light;
 }
 .rpgup-vdo .window-content { overflow: auto; padding: 16px; container-type: inline-size; container-name: rpgup; }
-.rpgup-vdo .window-content input:not([type="checkbox"]):not([type="range"]), .rpgup-vdo .window-content select { border: 1px solid var(--rpgup-line); border-radius: 5px; min-height: 32px; padding: 4px 7px; color: var(--rpgup-text); background: color-mix(in srgb, var(--rpgup-text) 5%, transparent); }
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]), .rpgup-world-config .window-content select { border: 1px solid var(--rpgup-line); border-radius: 5px; min-height: 32px; padding: 4px 7px; color: var(--rpgup-text); background: color-mix(in srgb, var(--rpgup-text) 5%, transparent); }
 /* Native option popup must follow the chosen Foundry theme (including Windows). */
-.rpgup-vdo .window-content select {
+.rpgup-world-config .window-content select {
   color-scheme: var(--rpgup-color-scheme);
   background-color: var(--rpgup-surface);
   color: var(--rpgup-menu-text);
 }
-.rpgup-vdo .window-content select option {
+.rpgup-world-config .window-content select option {
   background-color: var(--rpgup-surface);
   color: var(--rpgup-menu-text);
 }
-.rpgup-vdo .window-content select option:checked {
+.rpgup-world-config .window-content select option:checked {
   background-color: var(--rpgup-tab-selected);
   color: var(--rpgup-tab-selected-text);
 }
-.rpgup-vdo .window-content select option:disabled { color: var(--rpgup-muted); }
-.rpgup-vdo .window-content button { border-radius: 5px; min-height: 30px; padding: 4px 8px; }
-.rpgup-vdo .window-content button:not(.rpgup-primary) { color: var(--rpgup-text); background: var(--rpgup-card); border: 1px solid var(--rpgup-line); }
-.rpgup-vdo .window-content button:not(.rpgup-primary):hover { border-color: var(--rpgup-accent); }
+.rpgup-world-config .window-content select option:disabled { color: var(--rpgup-muted); }
+.rpgup-world-config .window-content button { border-radius: 5px; min-height: 30px; padding: 4px 8px; }
+.rpgup-world-config .window-content button:not(.rpgup-primary) { color: var(--rpgup-text); background: var(--rpgup-card); border: 1px solid var(--rpgup-line); }
+.rpgup-world-config .window-content button:not(.rpgup-primary):hover { border-color: var(--rpgup-accent); }
 .rpgup-vdo button:disabled, .rpgup-vdo input:disabled { opacity: 0.55; }
 .rpgup-room-dock > .window-header { border-bottom: 1px solid var(--rpgup-line); }
 .rpgup-room-dock > .window-header .header-control { transition: color 120ms, background-color 120ms; border-radius: 5px; }
@@ -60,13 +60,13 @@
 .rpgup-vdo .rpgup-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .rpgup-vdo .rpgup-actions button { width: auto; flex: 0 1 auto; min-height: 32px; }
 .rpgup-vdo button > i { margin-right: 5px; }
-.rpgup-vdo .rpgup-panel { border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 9px; padding: 12px; margin: 0; min-width: 0; }
-.rpgup-vdo .rpgup-panel legend { padding: 0 6px; color: var(--rpgup-accent-readable); font-size: 13px; font-weight: 600; }
-.rpgup-vdo .rpgup-help { color: var(--rpgup-muted); font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
+.rpgup-world-config .rpgup-panel { border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 9px; padding: 12px; margin: 0; min-width: 0; }
+.rpgup-world-config .rpgup-panel legend { padding: 0 6px; color: var(--rpgup-accent-readable); font-size: 13px; font-weight: 600; }
+.rpgup-world-config .rpgup-help { color: var(--rpgup-muted); font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
 .rpgup-vdo .rpgup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 10px; }
 .rpgup-vdo .rpgup-intro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .rpgup-vdo .rpgup-intro h2 { margin: 0; border: 0; font-size: 20px; }
-.rpgup-vdo .rpgup-badge { display: inline-block; font-size: 11px; border: 1px solid var(--rpgup-line); border-radius: 20px; padding: 3px 8px; color: var(--rpgup-muted); white-space: nowrap; }
+.rpgup-world-config .rpgup-badge { display: inline-block; font-size: 11px; border: 1px solid var(--rpgup-line); border-radius: 20px; padding: 3px 8px; color: var(--rpgup-muted); white-space: nowrap; }
 .rpgup-vdo .rpgup-advanced { border-top: 1px solid var(--rpgup-line); padding-top: 10px; }
 .rpgup-vdo .rpgup-advanced summary { cursor: pointer; font-size: 12px; color: var(--rpgup-muted); padding: 4px 0; }
 .rpgup-vdo .rpgup-advanced[open] summary { margin-bottom: 10px; }
@@ -165,7 +165,7 @@ body.rpgup-vdo-docked #interface {
 .rpgup-config-footer button { flex: 0 1 auto; width: auto; min-height: 34px; }
 @media (max-width: 640px) {
   .rpgup-vdo .rpgup-grid { grid-template-columns: minmax(0, 1fr); }
-  .rpgup-vdo .rpgup-panel { padding: 10px; }
+  .rpgup-world-config .rpgup-panel { padding: 10px; }
   .rpgup-room-dock .rpgup-toolbar { gap: 10px; }
   .rpgup-room-dock .rpgup-field { flex: 1 1 160px; }
   .rpgup-room-dock .rpgup-toggle { flex-basis: 100%; }
@@ -227,10 +227,10 @@ body.rpgup-vdo-docked #interface {
 .rpgup-vdo .window-content,
 .rpgup-vdo .rpgup-config-form,
 .rpgup-vdo .rpgup-tab-pane,
-.rpgup-vdo .rpgup-option-editor,
-.rpgup-vdo .rpgup-audio-filter-grid { color: var(--rpgup-text); }
+.rpgup-world-config .rpgup-option-editor,
+.rpgup-world-config .rpgup-audio-filter-grid { color: var(--rpgup-text); }
 .rpgup-vdo .rpgup-config-footer p,
-.rpgup-vdo .rpgup-help,
+.rpgup-world-config .rpgup-help,
 .rpgup-vdo .rpgup-option-entry code,
 .rpgup-vdo .rpgup-audio-filter-toggle { color: var(--rpgup-muted); }
 .rpgup-vdo .rpgup-field > span,
@@ -481,8 +481,6 @@ body.rpgup-vdo-docked #interface {
   --rpgup-elevation: 0 18px 48px rgb(0 0 0 / 28%);
   --rpgup-control-radius: 8px;
   color: var(--rpgup-text);
-  font-size: 13px;
-  line-height: 1.45;
 }
 :is(body.theme-light, .themed.theme-light) .rpgup-vdo,
 .rpgup-vdo:is(.theme-light, .themed.theme-light) {
@@ -498,26 +496,26 @@ body.rpgup-vdo-docked #interface {
   --rpgup-color-scheme: light;
   --rpgup-elevation: 0 16px 42px rgb(57 43 25 / 16%);
 }
-.rpgup-vdo.application {
+.rpgup-world-config.application {
   border: 1px solid var(--rpgup-line);
   border-radius: 13px;
   box-shadow: var(--rpgup-elevation);
   overflow: hidden;
 }
-.rpgup-vdo > .window-header {
+.rpgup-world-config > .window-header {
   min-height: 42px;
   padding: 5px 9px 5px 13px;
   border-bottom: 1px solid var(--rpgup-line);
   background: var(--rpgup-surface);
   color: var(--rpgup-text);
 }
-.rpgup-vdo > .window-header .window-title {
+.rpgup-world-config > .window-header .window-title {
   color: var(--rpgup-text);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: .015em;
 }
-.rpgup-vdo > .window-header .header-control {
+.rpgup-world-config > .window-header .header-control {
   display: inline-flex;
   width: 30px;
   height: 30px;
@@ -528,8 +526,8 @@ body.rpgup-vdo-docked #interface {
   color: var(--rpgup-muted);
   transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
 }
-.rpgup-vdo > .window-header .header-control:hover,
-.rpgup-vdo > .window-header .header-control:focus-visible {
+.rpgup-world-config > .window-header .header-control:hover,
+.rpgup-world-config > .window-header .header-control:focus-visible {
   color: var(--rpgup-accent-readable);
   border-color: var(--rpgup-line);
   background: var(--rpgup-card);
@@ -538,9 +536,9 @@ body.rpgup-vdo-docked #interface {
   background: var(--rpgup-surface);
   color: var(--rpgup-text);
 }
-.rpgup-vdo .window-content input:not([type="checkbox"]):not([type="range"]),
-.rpgup-vdo .window-content select,
-.rpgup-vdo .window-content textarea {
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]),
+.rpgup-world-config .window-content select,
+.rpgup-world-config .window-content textarea {
   min-height: 36px;
   border: 1px solid var(--rpgup-line);
   border-radius: var(--rpgup-control-radius);
@@ -548,25 +546,25 @@ body.rpgup-vdo-docked #interface {
   color: var(--rpgup-text);
   transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
 }
-.rpgup-vdo .window-content input:not([type="checkbox"]):not([type="range"]):hover,
-.rpgup-vdo .window-content select:hover,
-.rpgup-vdo .window-content textarea:hover {
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]):hover,
+.rpgup-world-config .window-content select:hover,
+.rpgup-world-config .window-content textarea:hover {
   border-color: color-mix(in srgb, var(--rpgup-accent) 55%, var(--rpgup-line));
 }
-.rpgup-vdo .window-content input:not([type="checkbox"]):not([type="range"]):focus,
-.rpgup-vdo .window-content select:focus,
-.rpgup-vdo .window-content textarea:focus {
+.rpgup-world-config .window-content input:not([type="checkbox"]):not([type="range"]):focus,
+.rpgup-world-config .window-content select:focus,
+.rpgup-world-config .window-content textarea:focus {
   border-color: var(--rpgup-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--rpgup-accent) 17%, transparent);
   outline: none;
 }
-.rpgup-vdo .window-content select,
-.rpgup-vdo .window-content select option {
+.rpgup-world-config .window-content select,
+.rpgup-world-config .window-content select option {
   color-scheme: var(--rpgup-color-scheme);
   background-color: var(--rpgup-panel);
   color: var(--rpgup-menu-text);
 }
-.rpgup-vdo .window-content button {
+.rpgup-world-config .window-content button {
   min-height: 34px;
   padding: 6px 10px;
   border-radius: var(--rpgup-control-radius);
@@ -574,18 +572,18 @@ body.rpgup-vdo-docked #interface {
   font-weight: 600;
   transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
-.rpgup-vdo .window-content button:not(.rpgup-primary) {
+.rpgup-world-config .window-content button:not(.rpgup-primary) {
   border: 1px solid var(--rpgup-line);
   background: var(--rpgup-card);
   color: var(--rpgup-text);
 }
-.rpgup-vdo .window-content button:not(:disabled):not(.rpgup-primary):hover {
+.rpgup-world-config .window-content button:not(:disabled):not(.rpgup-primary):hover {
   border-color: color-mix(in srgb, var(--rpgup-accent) 70%, var(--rpgup-line));
   background: color-mix(in srgb, var(--rpgup-accent) 9%, var(--rpgup-panel));
 }
-.rpgup-vdo .window-content button:not(:disabled):active { transform: translateY(1px); }
-.rpgup-vdo .window-content button:disabled { cursor: not-allowed; opacity: .52; }
-.rpgup-vdo .window-content button.rpgup-primary,
+.rpgup-world-config .window-content button:not(:disabled):active { transform: translateY(1px); }
+.rpgup-world-config .window-content button:disabled { cursor: not-allowed; opacity: .52; }
+.rpgup-world-config .window-content button.rpgup-primary,
 .rpgup-vdo .window-content .rpgup-primary {
   min-height: 36px;
   border: 1px solid #a77e4b;
@@ -594,26 +592,26 @@ body.rpgup-vdo-docked #interface {
   color: #fff8ee;
   box-shadow: 0 2px 7px rgb(0 0 0 / 12%);
 }
-.rpgup-vdo .window-content button.rpgup-primary:not(:disabled):hover,
+.rpgup-world-config .window-content button.rpgup-primary:not(:disabled):hover,
 .rpgup-vdo .window-content .rpgup-primary:not(:disabled):hover {
   border-color: #c69b66;
   background: #946c3d;
   box-shadow: 0 4px 12px rgb(0 0 0 / 17%);
 }
-.rpgup-vdo .window-content button:focus-visible,
-.rpgup-vdo .window-content input:focus-visible,
-.rpgup-vdo .window-content select:focus-visible,
-.rpgup-vdo .window-content summary:focus-visible {
+.rpgup-world-config .window-content button:focus-visible,
+.rpgup-world-config .window-content input:focus-visible,
+.rpgup-world-config .window-content select:focus-visible,
+.rpgup-world-config .window-content summary:focus-visible {
   outline: 2px solid var(--rpgup-accent);
   outline-offset: 2px;
 }
-.rpgup-vdo .rpgup-help,
+.rpgup-world-config .rpgup-help,
 .rpgup-vdo .rpgup-config-footer p {
   color: var(--rpgup-muted);
   font-size: 12px;
   line-height: 1.55;
 }
-.rpgup-vdo .rpgup-badge {
+.rpgup-world-config .rpgup-badge {
   padding: 4px 9px;
   border-color: var(--rpgup-line);
   border-radius: 999px;
@@ -623,15 +621,20 @@ body.rpgup-vdo-docked #interface {
   font-weight: 650;
   letter-spacing: .015em;
 }
-.rpgup-vdo .rpgup-panel,
-.rpgup-vdo .rpgup-option-editor,
-.rpgup-vdo .rpgup-audio-filter-grid {
+.rpgup-world-config .rpgup-panel,
+.rpgup-world-config .rpgup-option-editor,
+.rpgup-world-config .rpgup-audio-filter-grid {
   border: 1px solid var(--rpgup-line);
   border-radius: 11px;
   background: var(--rpgup-panel);
 }
 .rpgup-world-config {
   border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.rpgup-world-config.application {
+  box-sizing: border-box;
 }
 .rpgup-world-config .window-content {
   padding: 18px 20px;
@@ -925,6 +928,7 @@ body.rpgup-vdo-docked #interface {
   accent-color: var(--rpgup-accent);
 }
 .rpgup-room-dock.application[data-dock="floating"] {
+  box-sizing: border-box;
   border-radius: 12px;
   box-shadow: var(--rpgup-elevation);
 }
@@ -944,14 +948,14 @@ body.rpgup-vdo-docked #interface {
   line-height: 1.5;
 }
 .rpgup-room-dock .rpgup-frame-host { background: #12151a; }
-.rpgup-vdo .rpgup-info-icon {
+.rpgup-world-config .rpgup-info-icon {
   width: 20px;
   height: 20px;
   border: 1px solid transparent;
   border-radius: 50%;
 }
-.rpgup-vdo .rpgup-info-icon:hover,
-.rpgup-vdo .rpgup-info-icon:focus-visible {
+.rpgup-world-config .rpgup-info-icon:hover,
+.rpgup-world-config .rpgup-info-icon:focus-visible {
   border-color: var(--rpgup-line);
   background: var(--rpgup-card);
 }
@@ -978,11 +982,11 @@ body.rpgup-vdo-docked #interface {
   .rpgup-world-config .rpgup-config-footer { bottom: -12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rpgup-vdo > .window-header .header-control,
-  .rpgup-vdo .window-content button,
-  .rpgup-vdo .window-content input,
-  .rpgup-vdo .window-content select,
-  .rpgup-vdo .window-content textarea {
+  .rpgup-world-config > .window-header .header-control,
+  .rpgup-world-config .window-content button,
+  .rpgup-world-config .window-content input,
+  .rpgup-world-config .window-content select,
+  .rpgup-world-config .window-content textarea {
     transition: none !important;
   }
 }
