@@ -976,38 +976,6 @@ body.rpgup-vdo-docked #interface {
 }
 
 
-/* Native select controls can retain the browser's dark surface when the
-   Foundry theme changes at runtime. Explicitly synchronize the light palette. */
-:is(body.theme-light, .themed.theme-light) .rpgup-world-config .window-content select,
-.rpgup-world-config:is(.theme-light, .themed.theme-light) .window-content select {
-  color-scheme: light !important;
-  background-color: #f3efe7 !important;
-  color: #272421 !important;
-}
-:is(body.theme-light, .themed.theme-light) .rpgup-world-config .window-content select option,
-.rpgup-world-config:is(.theme-light, .themed.theme-light) .window-content select option {
-  background-color: #f3efe7 !important;
-  color: #272421 !important;
-}
-:is(body.theme-light, .themed.theme-light) .rpgup-world-config .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"],
-.rpgup-world-config:is(.theme-light, .themed.theme-light) .window-content .rpgup-tab-bar .rpgup-tab-button[aria-selected="true"] {
-  background: #ead8bc !important;
-  color: #412f1b !important;
-}
-
-
-/* Foundry can switch Theme V2 on body while native form controls keep the
-   previous palette. Target the GM audio preset directly for that transition. */
-body.theme-light #rpgup-vdo-world-config select[name="audioFilterPreset"] {
-  appearance: none !important;
-  color-scheme: light !important;
-  background-color: #f3efe7 !important;
-  color: #272421 !important;
-}
-body.theme-light #rpgup-vdo-world-config #rpgup-world-tab-audioFilters[aria-selected="true"] {
-  background: #ead8bc !important;
-  color: #412f1b !important;
-}
 
 
 /* Give native selects a theme-aware custom chevron so Chromium/OS native
