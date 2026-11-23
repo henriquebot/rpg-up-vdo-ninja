@@ -246,15 +246,14 @@ try {
         navBg: nav.backgroundColor, selectColor: select.color, selectBg: select.backgroundColor,
         selectScheme: select.colorScheme, footerBg: footer.backgroundColor, footerColor: footer.color,
         helpColor: help.color, labelColor: label.color,
-        bodyClasses: document.body.className,
-        selectRoot: document.querySelector('select[name="audioFilterPreset"]')?.closest("#rpgup-vdo-world-config")?.id ?? null,
-        selectDock: document.querySelector('select[name="audioFilterPreset"]')?.closest("#rpgup-vdo-room")?.id ?? null,
-        selectClasses: document.querySelector('select[name="audioFilterPreset"]')?.closest(".rpgup-vdo")?.className ?? null,
-        selectInlineStyle: document.querySelector('select[name="audioFilterPreset"]')?.getAttribute("style"),
         selectSurface: select.getPropertyValue("--rpgup-surface"),
-        selectMenuText: select.getPropertyValue("--rpgup-menu-text"),
-        selectAncestors: (() => { const nodes = []; let node = document.querySelector('select[name="audioFilterPreset"]'); while (node && nodes.length < 9) { nodes.push({ tag: node.tagName, id: node.id, className: node.className }); node = node.parentElement; } return nodes; })(),
-        contrastSelect: contrast(select.color, select.backgroundColor),
+        contrastSelect: contrast(select.color, (() => {
+          const surface = select.getPropertyValue("--rpgup-surface").trim();
+          const hex = surface.match(/^#([\da-f]{6})$/i);
+          if (!hex) return surface;
+          const value = hex[1];
+          return `rgb(${parseInt(value.slice(0, 2), 16)}, ${parseInt(value.slice(2, 4), 16)}, ${parseInt(value.slice(4, 6), 16)})`;
+        })()),
         contrastTab: contrast(tab.color, tab.backgroundColor),
         contrastFooter: contrast(footer.color, footer.backgroundColor)
       };
