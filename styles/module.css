@@ -1005,3 +1005,25 @@ body.rpgup-vdo-docked #interface {
 .rpgup-world-config .rpgup-table-wrap {
   width: 100%;
 }
+
+
+/* Prevent flex/grid min-content sizing and form-control padding from widening
+   the GM settings pane on narrow Foundry windows. */
+.rpgup-world-config .rpgup-config-form,
+.rpgup-world-config .rpgup-config-form * {
+  box-sizing: border-box;
+}
+.rpgup-world-config .rpgup-tabs,
+.rpgup-world-config .rpgup-tab-content,
+.rpgup-world-config .rpgup-tab-pane,
+.rpgup-world-config .rpgup-tab-section,
+.rpgup-world-config .rpgup-grid,
+.rpgup-world-config .rpgup-field,
+.rpgup-world-config .rpgup-field-caption {
+  min-width: 0;
+  max-width: 100%;
+}
+.rpgup-world-config .rpgup-field-caption {
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
