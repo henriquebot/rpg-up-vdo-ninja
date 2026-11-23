@@ -41,8 +41,8 @@ export class RoomDock extends ApplicationV2 {
     }), "Recarregar somente sua sala VDO para atualizar mudanças do Director. Reinicia sua conexão e câmera; mantém o Foundry aberto e não salva rascunhos do GM. Para aplicar opções do módulo, use Aplicar / reconectar.");
     this._settingsButton = tooltip(element("button", undefined, {
       type: "button", class: "header-control icon fa-solid fa-gear", "data-action": "toggleModuleSettings",
-      "aria-label": "Opções VDO.Ninja"
-    }), "Abrir o HUD de câmeras na barra lateral do Foundry. Câmera e PiP ficam no VDO.Ninja.");
+      "aria-label": "Configurações RPGUP VDO.Ninja"
+    }), "Abrir as configurações do RPGUP VDO.Ninja. Câmera, microfone e PiP continuam nos controles nativos do VDO.Ninja.");
     this._undockButton = tooltip(element("button", undefined, {
       type: "button", class: "header-control icon fa-solid fa-up-right-from-square", "data-action": "undock",
       "aria-label": "Desacoplar janela"
@@ -165,7 +165,7 @@ export class RoomDock extends ApplicationV2 {
       this._iframe.allow = "camera; autoplay; fullscreen; display-capture; picture-in-picture" + (world.audio === "vdo" ? "; microphone" : "");
       this._pending = false;
       this._settingsButton.classList.remove("rpgup-attention");
-      tooltip(this._settingsButton, "Abrir o HUD de câmeras na barra lateral do Foundry.");
+      tooltip(this._settingsButton, "Abrir as configurações do RPGUP VDO.Ninja.");
       this._alert.hidden = true;
       this._activeURL = url;
       this._iframe.src = url;
@@ -197,7 +197,7 @@ export class RoomDock extends ApplicationV2 {
     }
     this._pending = true;
     this._settingsButton?.classList.add("rpgup-attention");
-    this._status.textContent = "Configuração alterada. Abra a aba HUD e clique em Aplicar / reconectar (a câmera será desconectada).";
+    this._status.textContent = "Configuração alterada. Abra as configurações do módulo e clique em Aplicar / reconectar (a câmera será desconectada).";
     if (this._settingsButton) tooltip(this._settingsButton, this._status.textContent);
   }
 
