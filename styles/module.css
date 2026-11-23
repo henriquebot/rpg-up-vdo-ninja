@@ -59,7 +59,24 @@
 .rpgup-vdo .rpgup-primary:hover { background: #97713f; }
 .rpgup-vdo .rpgup-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .rpgup-vdo .rpgup-actions button { width: auto; flex: 0 1 auto; min-height: 32px; }
-.rpgup-vdo button > i { margin-right: 5px; }
+ .rpgup-vdo button > i { margin-right: 5px; }
+/* One custom SVG glyph: camera silhouette with an integrated settings cog.
+   The mask inherits currentColor so it remains legible in both Foundry themes. */
+.rpgup-camera-gear-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask-image: url("../assets/camera-settings.svg");
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-image: url("../assets/camera-settings.svg");
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+}
 .rpgup-world-config .rpgup-panel { border: 1px solid var(--rpgup-line); background: var(--rpgup-card); border-radius: 9px; padding: 12px; margin: 0; min-width: 0; }
 .rpgup-world-config .rpgup-panel legend { padding: 0 6px; color: var(--rpgup-accent-readable); font-size: 13px; font-weight: 600; }
 .rpgup-world-config .rpgup-help { color: var(--rpgup-muted); font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
