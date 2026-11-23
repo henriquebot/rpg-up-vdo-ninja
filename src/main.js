@@ -51,7 +51,11 @@ export async function showDock() {
     syncDockButton();
     return dock;
   }
-  return openDock();
+  const opened = await openDock();
+  if (opened.prefs.collapsed) await opened.setCollapsed(false);
+  opened.bringToFront();
+  syncDockButton();
+  return opened;
 }
 
 export async function toggleOptions() {
